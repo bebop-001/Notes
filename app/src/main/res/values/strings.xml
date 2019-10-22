@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Notes</string>
+
+    <string name="YES">Yes</string>
+    <string name="NO">No</string>
+
+    <!-- CreateShortcut -->
+    <string name="promptForShortcutTitle">
+        "Install Desktop Query"
+    </string>
+    <string name="promptForShortcut">
+        Do you want a desktop shortcut created for \"%1$s\"?"
+    </string>
+
+</resources>

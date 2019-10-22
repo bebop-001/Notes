@@ -1,0 +1,47 @@
+> Task :clean
+> Task :app:clean
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:compileDebugAidl NO-SOURCE
+> Task :app:checkDebugManifest
+> Task :app:generateDebugBuildConfig
+> Task :app:compileDebugRenderscript NO-SOURCE
+> Task :app:mainApkListPersistenceDebug
+> Task :app:generateDebugResValues
+> Task :app:generateDebugResources
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:processDebugManifest
+> Task :app:mergeDebugResources
+> Task :app:processDebugResources
+
+> Task :app:compileDebugKotlin
+w: /home/sjs/dev/kana-tutor/Notes/app/src/main/java/com/kana_tutor/notes/kanautils/CreateShortcut.kt: (59, 23): This cast can never succeed
+w: /home/sjs/dev/kana-tutor/Notes/app/src/main/java/com/kana_tutor/notes/kanautils/CreateShortcut.kt: (99, 70): Unnecessary non-null assertion (!!) on a non-null receiver of type String
+w: /home/sjs/dev/kana-tutor/Notes/app/src/main/java/com/kana_tutor/notes/kanautils/CreateShortcut.kt: (159, 35): 'EXTRA_SHORTCUT_INTENT: String' is deprecated. Deprecated in Java
+w: /home/sjs/dev/kana-tutor/Notes/app/src/main/java/com/kana_tutor/notes/kanautils/CreateShortcut.kt: (160, 35): 'EXTRA_SHORTCUT_NAME: String' is deprecated. Deprecated in Java
+w: /home/sjs/dev/kana-tutor/Notes/app/src/main/java/com/kana_tutor/notes/kanautils/CreateShortcut.kt: (164, 35): 'EXTRA_SHORTCUT_ICON_RESOURCE: String' is deprecated. Deprecated in Java
+w: /home/sjs/dev/kana-tutor/Notes/app/src/main/java/com/kana_tutor/notes/kanautils/Utils.kt: (53, 25): 'fromHtml(String!): Spanned!' is deprecated. Deprecated in Java
+
+> Task :app:javaPreCompileDebug
+> Task :app:compileDebugJavaWithJavac
+> Task :app:compileDebugSources
+> Task :app:mergeDebugShaders
+> Task :app:compileDebugShaders
+> Task :app:generateDebugAssets
+> Task :app:mergeDebugAssets
+> Task :app:processDebugJavaRes NO-SOURCE
+> Task :app:checkDebugDuplicateClasses
+> Task :app:transformClassesWithDexBuilderForDebug
+> Task :app:validateSigningDebug
+> Task :app:signingConfigWriterDebug
+> Task :app:mergeDebugJniLibFolders
+> Task :app:mergeDebugNativeLibs
+> Task :app:stripDebugDebugSymbols
+> Task :app:mergeDebugJavaResource
+> Task :app:mergeExtDexDebug
+> Task :app:mergeDexDebug
+> Task :app:packageDebug
+> Task :app:assembleDebug
+
+BUILD SUCCESSFUL in 3s
+27 actionable tasks: 27 executed
