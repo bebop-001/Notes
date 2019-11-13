@@ -1,36 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    *  Copyright 2018 Steven Smith kana-tutor.com
-    *
-    *  Licensed under the Apache License, Version 2.0 (the "License");
-    *  you may not use this file except in compliance with the License.
-    *
-    *  You may obtain a copy of the License at
-    *      http://www.apache.org/licenses/LICENSE-2.0
-    *
-    *  Unless required by applicable law or agreed to in writing,
-    *  software distributed under the License is distributed on an
-    *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-    *  either express or implied.
-    *
-    *  See the License for the specific language governing permissions
-    *  and limitations under the License.
-    -->
-
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/colorPrimary"
     tools:context=".MainActivity">
 
-    <TextView
+    <Button
+        android:id="@+id/new_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginTop="16dp"
+        android:onClick="newFile"
+        android:text="@string/new_string"
+        app:layout_constraintEnd_toStartOf="@+id/open_button"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <Button
+        android:id="@+id/open_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:onClick="openFile"
+        android:text="@string/open_string"
+        app:layout_constraintEnd_toStartOf="@+id/save_button"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/new_button"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/save_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        android:onClick="saveFile"
+        android:text="@string/save_string"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/open_button"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
+        android:id="@+id/fileText"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="10dp"
+        android:background="@android:color/darker_gray"
+        android:clickable="true"
+        android:ems="10"
+        android:focusable="true"
+        android:gravity="start"
+        android:inputType="textMultiLine"
+        android:isScrollContainer="true"
+        android:padding="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/open_button">
+
+        <requestFocus />
+    </EditText>
 </androidx.constraintlayout.widget.ConstraintLayout>
