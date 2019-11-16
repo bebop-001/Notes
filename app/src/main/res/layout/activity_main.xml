@@ -7,40 +7,18 @@
     android:background="@color/colorPrimary"
     tools:context=".MainActivity">
 
-    <Button
-        android:id="@+id/new_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:onClick="newFile"
-        android:text="@string/new_string"
-        app:layout_constraintEnd_toStartOf="@+id/open_button"
-        app:layout_constraintHorizontal_bias="0.5"
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?android:attr/actionBarSize"
+        android:background="@color/colorPrimaryDark"
+        android:clickable="false"
+        android:theme="@android:style/ThemeOverlay.Material.Dark.ActionBar"
+        app:menu="@menu/main_menu"
+        app:title="@string/app_name"
+        app:titleTextColor="@android:color/background_light"
+        tools:ignore="NewApi"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <Button
-        android:id="@+id/open_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:onClick="openFile"
-        android:text="@string/open_string"
-        app:layout_constraintEnd_toStartOf="@+id/save_button"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/new_button"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <Button
-        android:id="@+id/save_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
-        android:onClick="saveFile"
-        android:text="@string/save_string"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/open_button"
         app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
@@ -59,7 +37,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/open_button">
+        app:layout_constraintTop_toBottomOf="@+id/toolbar">
 
         <requestFocus />
     </EditText>

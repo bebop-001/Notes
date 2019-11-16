@@ -31,6 +31,9 @@ import android.net.Uri
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
+import androidx.core.content.ContextCompat
 import com.kana_tutor.notes.kanautils.promptForShortcut
 
 import java.io.FileOutputStream
@@ -65,6 +68,10 @@ class MainActivity : AppCompatActivity() {
             // Ask user if they want a shortcut on their home screen.
             promptForShortcut(this, MainActivity::class.java)
         }
+
+        toolbar.overflowIcon = ContextCompat.getDrawable(
+            this, R.drawable.vert_ellipsis_light_img)
+        setSupportActionBar(toolbar)
 
         fileText.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(
@@ -199,4 +206,20 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+    // Menu item selected listener.
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        var rv = true
+        return rv
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        return true
+    }
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        val inflater = menuInflater
+        inflater.inflate(R.menu.main_menu, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
 }

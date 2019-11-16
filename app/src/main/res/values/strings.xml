@@ -14,5 +14,6 @@
     <string name="promptForShortcut">
         Do you want a desktop shortcut created for \"%1$s\"?"
     </string>
+    <string name="about">About...</string>
 
 </resources>
