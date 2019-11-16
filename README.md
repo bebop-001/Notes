@@ -8,6 +8,9 @@ Kotlin and the GooglePlay process for android apps.  One of
 the goals is to have an app that will work from API-19
 through whatever is current (API-29 right now)
 
+Fri Nov 15 17:13:56 PST 2019
+removed test code that was creating desktop shortcut each time app started.
+Changed icon and color scheme.
 
 Wed Oct 23 08:20:58 PDT 2019
 Initial commit to git hub.  Current code creates a shortcut
