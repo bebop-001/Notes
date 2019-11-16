@@ -21,12 +21,27 @@ package com.kana_tutor.notes.kanautils
 import android.app.Activity
 import android.app.AlertDialog
 import android.graphics.Color
+import android.os.Build
 import android.text.Html
+import android.text.Spanned
 import android.text.method.LinkMovementMethod
 import android.util.Log
 import android.util.TypedValue
 import android.widget.TextView
+import androidx.core.text.HtmlCompat
 import com.kana_tutor.notes.R
+
+// Return a spanned html string using the appropriate call for
+// the user's device.
+private fun htmlString(htmlString:String) : Spanned {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        Html.fromHtml(htmlString, HtmlCompat.FROM_HTML_MODE_LEGACY)
+    }
+    else {
+        @Suppress("DEPRECATION")
+        Html.fromHtml(htmlString)
+    }
+}
 
 /**
  * Method takes an app context, a boolean saying if the string in is
@@ -68,7 +83,7 @@ fun yesNoDialog(
     Log.d("promptForShortcut", "entered")
     val query = TextView(a)
     if (isHtmlQuery) {
-        val html = Html.fromHtml(queryString)
+        val html = htmlString(queryString)
         query.text = html
         query.movementMethod = LinkMovementMethod.getInstance()
     } else
