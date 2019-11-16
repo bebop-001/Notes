@@ -80,7 +80,7 @@ fun yesNoDialog(
         a,
         R.style.rounded_corner_dialog
     )
-        .setIcon(R.drawable.qmark)
+        .setIcon(R.mipmap.notes_launcher)
         .setView(query)
     if (buttonStringResId.size < 1 || buttonStringResId.size > 2)
         throw RuntimeException(

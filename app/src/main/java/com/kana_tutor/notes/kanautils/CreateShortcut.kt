@@ -76,7 +76,7 @@ private fun postApi26CreateShortcut(c: Context, scClass: Class<*>) {
                     shortcutId
                 )
                     .setShortLabel(c.getString(R.string.app_name))
-                    .setIcon(createWithResource(c, R.drawable.qmark))
+                    .setIcon(createWithResource(c, R.mipmap.notes_launcher))
                     .setIntent(shortcutIntent)
                     .build()
                 val successCallback = PendingIntent.getBroadcast(
@@ -100,7 +100,7 @@ private fun preApi26CreateShortcut(activity: Activity, scClass: Class<*>) {
     addIntent.putExtra(Intent.EXTRA_SHORTCUT_NAME, activity.getString(R.string.app_name))
     val icon = Intent.ShortcutIconResource.fromContext(
         activity,
-        R.drawable.qmark
+        R.mipmap.notes_launcher
     )
     addIntent.putExtra(Intent.EXTRA_SHORTCUT_ICON_RESOURCE, icon)
     addIntent.action = "com.android.launcher.action.INSTALL_SHORTCUT"

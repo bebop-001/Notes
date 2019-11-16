@@ -58,7 +58,7 @@ class MainActivity : AppCompatActivity() {
             , Context.MODE_PRIVATE
         )
         var firstRun = userPreferences.getBoolean("firstRun", true)
-        if (firstRun || true) {
+        if (firstRun) {
             userPreferences.edit()
                 .putBoolean("firstRun", false)
                 .apply()
