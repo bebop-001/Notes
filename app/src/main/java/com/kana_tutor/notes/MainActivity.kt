@@ -72,6 +72,8 @@ class MainActivity : AppCompatActivity() {
         toolbar.overflowIcon = ContextCompat.getDrawable(
             this, R.drawable.vert_ellipsis_light_img)
         setSupportActionBar(toolbar)
+        supportActionBar!!.setLogo(R.mipmap.notes_launcher)
+        supportActionBar!!.title = "hello"
 
         fileText.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(
