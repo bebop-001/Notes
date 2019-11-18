@@ -14,6 +14,28 @@
     <string name="promptForShortcut">
         Do you want a desktop shortcut created for \"%1$s\"?"
     </string>
-    <string name="about">About...</string>
+
+    <string name="open_file">Open File</string>
+    <string name="new_file">New File</string>
+    <string name="save_file">Save File</string>
+
+    <string name="build_info">Build Info...</string>
+    <string name="build_info_query" >
+        &lt;html&gt;%1$s
+        &lt;br&gt;Version(%2$d, %3$s)
+        &lt;br&gt;Build date:   %4$s
+        &lt;br&gt;Install date: %5$s
+        &lt;br&gt;Build info: %6$s
+        &lt;br&gt;Git branch: %7$s
+        &lt;/html&gt;
+    </string>
+    <string name="file_properties_format" >
+        &lt;html&gt;File name: %1$s
+        &lt;br&gt;Size %2$d bytes
+        &lt;br&gt;Modified %3$s
+        &lt;br&gt;Writable: %4$b
+        &lt;/html&gt;
+    </string>
+    <string name="file_properties">File Properties</string>
 
 </resources>

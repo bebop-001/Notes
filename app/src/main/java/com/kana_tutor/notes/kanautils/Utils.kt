@@ -21,19 +21,24 @@ package com.kana_tutor.notes.kanautils
 import android.app.Activity
 import android.app.AlertDialog
 import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Build
 import android.text.Html
 import android.text.Spanned
 import android.text.method.LinkMovementMethod
 import android.util.Log
 import android.util.TypedValue
+import android.view.Gravity
 import android.widget.TextView
 import androidx.core.text.HtmlCompat
+import com.kana_tutor.notes.BuildConfig
 import com.kana_tutor.notes.R
+import java.io.File
+import java.text.SimpleDateFormat
 
 // Return a spanned html string using the appropriate call for
 // the user's device.
-private fun htmlString(htmlString:String) : Spanned {
+fun htmlString(htmlString:String) : Spanned {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
         Html.fromHtml(htmlString, HtmlCompat.FROM_HTML_MODE_LEGACY)
     }
@@ -110,3 +115,37 @@ fun yesNoDialog(
     b.create()
     b.show()
 }
+// Display info about the build using an AlertDialog.
+fun displayBuildInfo(activity : Activity) : Boolean {
+    val appInfo = activity.packageManager
+        .getApplicationInfo(BuildConfig.APPLICATION_ID, 0)
+    val installTimestamp = File(appInfo.sourceDir).lastModified()
+
+    // use html to format our output 'about' message.
+    val htmlString = String.format(activity.getString(R.string.build_info_query)
+        , activity.getString(R.string.app_name)
+        , BuildConfig.VERSION_CODE, BuildConfig.VERSION_NAME
+        , SimpleDateFormat.getInstance().format(
+            java.util.Date(BuildConfig.BUILD_TIMESTAMP))
+        , SimpleDateFormat.getInstance().format(
+            java.util.Date(installTimestamp))
+        , if(BuildConfig.DEBUG) "debug" else "release"
+        , BuildConfig.BRANCH_NAME
+    )
+
+    // use a text-view in the alert so we can display an html
+    // formatted string.
+    val aboutTv = TextView(activity)
+    aboutTv.apply {
+        setTextSize(TypedValue.COMPLEX_UNIT_SP, 20.0f)
+        setTypeface(null, Typeface.BOLD)
+        text = htmlString(htmlString)
+        gravity = Gravity.CENTER
+    }
+
+    androidx.appcompat.app.AlertDialog.Builder(activity)
+        .setView(aboutTv)
+        .show()
+    return true
+}
+
