@@ -1,8 +1,36 @@
 apply plugin: 'com.android.application'
-
 apply plugin: 'kotlin-android'
-
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+
+
+// use git to get the current branch.
+static def gitBranch() {
+    def branch = ""
+    def proc = "git rev-parse --abbrev-ref HEAD".execute()
+    proc.in.eachLine { line -> branch = line }
+    proc.err.eachLine { line -> println line }
+    proc.waitFor()
+    branch
+}
+// use git to get the current branch identifier.
+static def gitBuildId() {
+    def buildId = ""
+    def proc = "git rev-parse  HEAD".execute()
+    proc.in.eachLine { line -> buildId = line }
+    proc.err.eachLine { line -> println line }
+    proc.waitFor()
+    buildId
+}
+// use git to get the current branch identifier.
+static def gitCommitDate() {
+    def commitDate = ""
+    def proc = "utils/gitCommitDate".execute()
+    proc.in.eachLine { line -> commitDate = line }
+    proc.err.eachLine { line -> commitDate line }
+    proc.waitFor()
+    commitDate
+}
 
 android {
     compileSdkVersion 29
@@ -12,13 +40,22 @@ android {
         minSdkVersion 19
         targetSdkVersion 29
         versionCode 1
-        versionName "1.0"
+        versionName "1.0-${gitBranch()}"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField 'long', 'BUILD_TIMESTAMP', String.format("0x%08xL", System.currentTimeMillis())
+        buildConfigField "String", "BRANCH_NAME", "\"${gitBranch()}\""
+        buildConfigField "String", "BUILD_ID", "\"${gitBuildId()}\""
+        buildConfigField "String", "COMMIT_DATE", "\"${gitCommitDate()}\""
     }
     buildTypes {
         release {
             minifyEnabled false
+            applicationIdSuffix ".rel"
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            applicationIdSuffix ".dbg"
         }
     }
 }
