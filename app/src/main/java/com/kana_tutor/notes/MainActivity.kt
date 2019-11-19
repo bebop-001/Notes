@@ -182,7 +182,7 @@ class MainActivity : AppCompatActivity() {
                 moveToFirst()
                 displayName = getKeyedString(COLUMN_DISPLAY_NAME)
                 size = getKeyedInt(COLUMN_SIZE)
-                lastModified = getKeyedLong(COLUMN_LAST_MODIFIED)
+                lastModified = getKeyedLong()
                 lastModifiedDate = Date(lastModified).toString()
                 isWritable = (getKeyedInt(COLUMN_FLAGS) and FLAG_SUPPORTS_WRITE) != 0
                 isInitialized = true

@@ -25,7 +25,7 @@ static def gitBuildId() {
 // use git to get the current branch identifier.
 static def gitCommitDate() {
     def commitDate = ""
-    def proc = "utils/gitCommitDate".execute()
+    def proc = "utils/gitCommitDate.pl".execute()
     proc.in.eachLine { line -> commitDate = line }
     proc.err.eachLine { line -> commitDate line }
     proc.waitFor()
