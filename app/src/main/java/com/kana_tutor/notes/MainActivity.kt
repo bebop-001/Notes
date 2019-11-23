@@ -136,6 +136,8 @@ class MainActivity : AppCompatActivity() {
     private fun writeFileContent(uri: Uri) {
         try {
             val pfd = contentResolver.openFileDescriptor(uri, "w")
+            currentFileProperties = FileProperties(this, uri)
+            supportActionBar!!.title = currentFileProperties.displayName
 
             val fileOutputStream = FileOutputStream(
                 pfd?.fileDescriptor)
@@ -146,7 +148,6 @@ class MainActivity : AppCompatActivity() {
 
             fileOutputStream.close()
             pfd?.close()
-            currentFileProperties = FileProperties(this, uri)
         } catch (e: Throwable) {
             e.printStackTrace()
         } catch (e: IOException) {
@@ -169,6 +170,7 @@ class MainActivity : AppCompatActivity() {
 
     inner class FileProperties {
         var displayName = "_none_"
+        var uri :String = ""
         var size = -1
         var isWritable = false
         var lastModified = 0L
@@ -182,18 +184,19 @@ class MainActivity : AppCompatActivity() {
                 moveToFirst()
                 displayName = getKeyedString(COLUMN_DISPLAY_NAME)
                 size = getKeyedInt(COLUMN_SIZE)
-                lastModified = getKeyedLong()
+                lastModified = getKeyedLong(COLUMN_LAST_MODIFIED)
                 lastModifiedDate = Date(lastModified).toString()
                 isWritable = (getKeyedInt(COLUMN_FLAGS) and FLAG_SUPPORTS_WRITE) != 0
                 isInitialized = true
             }
+            this.uri = uri.toString()
         }
         // return empty file properties.
         constructor()
         override fun toString(): String {
             return String.format(
-                "%s:%s:size=%d,isWritable:%b,lastModifiedDate:%s"
-                    , displayName, size, isWritable, lastModifiedDate
+                "%s:size=%d,isWritable:%b,lastModifiedDate:%s,uri=\"%s\""
+                    , displayName, size, isWritable, lastModifiedDate, uri
             )
             return super.toString()
         }
