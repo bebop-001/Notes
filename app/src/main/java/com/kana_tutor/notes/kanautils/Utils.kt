@@ -30,6 +30,7 @@ import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.text.HtmlCompat
 import com.kana_tutor.notes.BuildConfig
 import com.kana_tutor.notes.R
@@ -114,6 +115,16 @@ fun yesNoDialog(
         b.setNegativeButton(buttonStringResId[1]) { _,_ -> onClick[1]() }
     b.create()
     b.show()
+}
+
+fun Toast._setGravity(gravity: Int) : Toast {
+    this.setGravity(gravity, 0, 0)
+    return this
+}
+fun kToast(activity : Activity, message: String) {
+    val toast = Toast.makeText(activity, message, Toast.LENGTH_LONG)
+        ._setGravity(Gravity.CENTER_VERTICAL or Gravity.CENTER_HORIZONTAL)
+        .show()
 }
 // Display info about the build using an AlertDialog.
 fun displayBuildInfo(activity : Activity) : Boolean {

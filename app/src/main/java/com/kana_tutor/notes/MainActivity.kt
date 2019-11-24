@@ -46,6 +46,7 @@ import android.system.Os
 import android.util.TypedValue
 import android.view.Gravity
 import android.widget.TextView
+import com.kana_tutor.notes.kanautils.kToast
 import java.io.*
 import java.net.URLEncoder.encode
 import java.text.SimpleDateFormat
@@ -124,11 +125,25 @@ class MainActivity : AppCompatActivity() {
     }
     fun saveFile() {
         val currentUri = Uri.parse(currentFileProperties.uri)
-        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
-        intent.addCategory(Intent.CATEGORY_OPENABLE)
-        intent.type = "text/plain"
+        val pfd = contentResolver.openFileDescriptor(currentUri, "w")
+        if (pfd != null) {
+            val fileOutputStream = FileOutputStream(
+                pfd.fileDescriptor
+            )
+            val textContent = fileText.text.toString()
+            fileOutputStream.write(textContent.toByteArray())
+            fileOutputStream.close()
+            currentFileProperties = FileProperties(this,currentUri)
+            kToast(this, String.format("Saved %s\n%d bytes"
+                , currentFileProperties.displayName, currentFileProperties.size))
+        }
+        else {
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+            intent.addCategory(Intent.CATEGORY_OPENABLE)
+            intent.type = "text/plain"
 
-        startActivityForResult(intent, SAVE_REQUEST_CODE)
+            startActivityForResult(intent, SAVE_REQUEST_CODE)
+        }
     }
     fun saveFileAs() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
@@ -209,7 +224,7 @@ class MainActivity : AppCompatActivity() {
             }
             // based on code from https://stackoverflow.com/questions/30546441/
             // android-open-file-with-intent-chooser-from-uri-obtained-by-storage-access-frame
-            val pf = contentResolver.openFileDescriptor(uri, "r")
+            val pf : ParcelFileDescriptor? = contentResolver.openFileDescriptor(uri, "r")
             if (pf != null) {
                 val procFile = File("/proc/self/fd/" + pf.fd)
                 fileName  = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
