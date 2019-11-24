@@ -55,7 +55,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
-            applicationIdSuffix "${gitBranch()}.dbg"
+            applicationIdSuffix ".dbg"
         }
     }
 }

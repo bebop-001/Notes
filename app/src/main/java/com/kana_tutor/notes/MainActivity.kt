@@ -134,7 +134,7 @@ class MainActivity : AppCompatActivity() {
             fileOutputStream.write(textContent.toByteArray())
             fileOutputStream.close()
             currentFileProperties = FileProperties(this,currentUri)
-            kToast(this, String.format("Saved %s\n%d bytes"
+            kToast(this, getString(R.string.saveFormat
                 , currentFileProperties.displayName, currentFileProperties.size))
         }
         else {
