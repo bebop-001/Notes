@@ -17,6 +17,11 @@ through whatever is current (API-29 right now)
 I can't see how to make this work under Windows so it
 currently builds only under Linux.
 
+Sun Nov 24 11:02:26 PST 2019
+Added a 'save as' option and modified 'save'.  Save
+now just saves the current file without bring up the picker
+and 'save as' brings up the picker like 'save' used to.
+
 Sat Nov 23 12:24:13 PST 2019
 Fixed a crash bug under New File.  Fixed Save File so it
 correctly updates the displayed file name.
