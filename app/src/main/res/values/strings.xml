@@ -37,5 +37,6 @@
         &lt;/html&gt;
     </string>
     <string name="file_properties">File Properties</string>
+    <string name="save_as_file">Save File As</string>
 
 </resources>

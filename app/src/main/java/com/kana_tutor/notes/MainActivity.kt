@@ -20,16 +20,16 @@
 package com.kana_tutor.notes
 
 import android.app.Activity
-import android.content.Context
+import android.content.*
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 
-import android.content.Intent
-import android.content.SharedPreferences
 import android.database.Cursor
 import android.graphics.Typeface
 import android.view.View
 import android.net.Uri
+import android.os.Build
+import android.os.ParcelFileDescriptor
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -42,10 +42,12 @@ import com.kana_tutor.notes.kanautils.promptForShortcut
 
 import kotlinx.android.synthetic.main.activity_main.*
 import android.provider.DocumentsContract.Document.*
+import android.system.Os
 import android.util.TypedValue
 import android.view.Gravity
 import android.widget.TextView
 import java.io.*
+import java.net.URLEncoder.encode
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -61,6 +63,7 @@ class MainActivity : AppCompatActivity() {
     private val CREATE_REQUEST_CODE = 40
     private val OPEN_REQUEST_CODE = 41
     private val SAVE_REQUEST_CODE = 42
+    private val SAVE_AS_REQUEST_CODE = 43
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -120,11 +123,19 @@ class MainActivity : AppCompatActivity() {
         startActivityForResult(intent, CREATE_REQUEST_CODE)
     }
     fun saveFile() {
+        val currentUri = Uri.parse(currentFileProperties.uri)
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
         intent.addCategory(Intent.CATEGORY_OPENABLE)
         intent.type = "text/plain"
 
         startActivityForResult(intent, SAVE_REQUEST_CODE)
+    }
+    fun saveFileAs() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+        intent.addCategory(Intent.CATEGORY_OPENABLE)
+        intent.type = "text/plain"
+
+        startActivityForResult(intent, SAVE_AS_REQUEST_CODE)
     }
     private fun newFileContent(uri: Uri) {
         currentFileProperties = FileProperties(this, uri)
@@ -137,6 +148,8 @@ class MainActivity : AppCompatActivity() {
         try {
             val pfd = contentResolver.openFileDescriptor(uri, "w")
             currentFileProperties = FileProperties(this, uri)
+            Log.d("writeFileContent", currentFileProperties.toString())
+
             supportActionBar!!.title = currentFileProperties.displayName
 
             val fileOutputStream = FileOutputStream(
@@ -169,25 +182,40 @@ class MainActivity : AppCompatActivity() {
             = getLong(getColumnIndex(key))
 
     inner class FileProperties {
-        var displayName = "_none_"
+        var displayName = ""
         var uri :String = ""
         var size = -1
         var isWritable = false
         var lastModified = 0L
         var lastModifiedDate = Date(0).toString()
         var isInitialized = false
+        var documentId = ""
+        var authority = ""
+        var fileName = ""
 
         constructor(a : AppCompatActivity, uri : Uri) {
             val c = a.contentResolver.query(
                 uri, null, null, null, null)
             c?.apply {
                 moveToFirst()
-                displayName = getKeyedString(COLUMN_DISPLAY_NAME)
                 size = getKeyedInt(COLUMN_SIZE)
+                displayName = getKeyedString(COLUMN_DISPLAY_NAME)
                 lastModified = getKeyedLong(COLUMN_LAST_MODIFIED)
                 lastModifiedDate = Date(lastModified).toString()
                 isWritable = (getKeyedInt(COLUMN_FLAGS) and FLAG_SUPPORTS_WRITE) != 0
+                documentId = getKeyedString(COLUMN_DOCUMENT_ID)
+                authority = uri.authority.toString()
                 isInitialized = true
+            }
+            // based on code from https://stackoverflow.com/questions/30546441/
+            // android-open-file-with-intent-chooser-from-uri-obtained-by-storage-access-frame
+            val pf = contentResolver.openFileDescriptor(uri, "r")
+            if (pf != null) {
+                val procFile = File("/proc/self/fd/" + pf.fd)
+                fileName  = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+                    Os.readlink(procFile.toString())
+                else
+                    procFile.canonicalPath
             }
             this.uri = uri.toString()
         }
@@ -195,8 +223,8 @@ class MainActivity : AppCompatActivity() {
         constructor()
         override fun toString(): String {
             return String.format(
-                "%s:size=%d,isWritable:%b,lastModifiedDate:%s,uri=\"%s\""
-                    , displayName, size, isWritable, lastModifiedDate, uri
+                "%s:size=%d,isWritable:%b,lastModifiedDate:%s,id=\"%s\"uri=\"%s\", fileName=\"%s\""
+                    , displayName, size, isWritable, lastModifiedDate,documentId, uri, fileName
             )
             return super.toString()
         }
@@ -209,10 +237,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun readFileContent(uri: Uri): String {
         currentFileProperties = FileProperties(this, uri)
+        Log.d("readFileContent", currentFileProperties.toString())
         supportActionBar!!.title = currentFileProperties.displayName
         val inputStream = contentResolver.openInputStream(uri)
-        val reader = BufferedReader(InputStreamReader(
-            inputStream))
+        val reader = BufferedReader(InputStreamReader(inputStream))
         val stringBuilder = StringBuilder()
 
         var currentline = reader.readLine()
@@ -242,6 +270,14 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 SAVE_REQUEST_CODE -> {
+                    resultData?.let {
+                        currentUri = it.data
+                        currentUri?.let {
+                            writeFileContent(it)
+                        }
+                    }
+                }
+                SAVE_AS_REQUEST_CODE -> {
                     resultData?.let {
                         currentUri = it.data
                         currentUri?.let {
@@ -292,6 +328,7 @@ class MainActivity : AppCompatActivity() {
         var rv = true
         when (item.itemId) {
             R.id.save_file_item -> saveFile()
+            R.id.save_as_file_item -> saveFileAs()
             R.id.open_file_item -> openFile()
             R.id.new_file_item -> newFile()
             R.id.file_properties_item -> displayFileProperties()
@@ -302,6 +339,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        // disable save unless we have a file.
+        menu!!
+            .findItem(R.id.save_file_item)
+            .isEnabled = currentFileProperties.uri != ""
+        menu!!
+            .findItem(R.id.save_as_file_item)
+            .isEnabled = currentFileProperties.uri != ""
         return true
     }
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {

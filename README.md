@@ -13,6 +13,14 @@ Kotlin and the GooglePlay process for android apps.  One of
 the goals is to have an app that will work from API-19
 through whatever is current (API-29 right now)
 
+*NOTE* app/build.gradle executes calls to git and to PERL.
+I can't see how to make this work under Windows so it
+currently builds only under Linux.
+
+Sat Nov 23 12:24:13 PST 2019
+Fixed a crash bug under New File.  Fixed Save File so it
+correctly updates the displayed file name.
+
 Mon Nov 18 11:29:32 PST 2019<br>
 I think the basic functionality is all in place.  Added
 file properties menu item and build info menu item.
