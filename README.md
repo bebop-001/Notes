@@ -17,6 +17,9 @@ through whatever is current (API-29 right now)
 I can't see how to make this work under Windows so it
 currently builds only under Linux.
 
+Mon Nov 25 12:08:19 PST 2019
+Implemented Dark/Light theme.
+
 Sun Nov 24 11:02:26 PST 2019
 Added a 'save as' option and modified 'save'.  Save
 now just saves the current file without bring up the picker
