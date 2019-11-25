@@ -26,7 +26,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_margin="10dp"
-        android:background="@android:color/darker_gray"
+        android:background="@color/file_edit_window_bg"
         android:clickable="true"
         android:ems="10"
         android:focusable="true"

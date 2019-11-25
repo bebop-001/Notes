@@ -46,16 +46,21 @@ import android.system.Os
 import android.util.TypedValue
 import android.view.Gravity
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatDelegate
 import com.kana_tutor.notes.kanautils.kToast
 import java.io.*
 import java.net.URLEncoder.encode
 import java.text.SimpleDateFormat
 import java.util.*
 
-
+val appPrefsFileName = "userPrefs.xml"
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var _userPreferences : SharedPreferences
+    companion object {
+        var displayTheme = 0 // for light or dark theme.
+    }
+
+        private lateinit var _userPreferences : SharedPreferences
     val userPreferences : SharedPreferences
     get() = _userPreferences
 
@@ -70,8 +75,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         _userPreferences = getSharedPreferences(
-            getString(R.string.app_name) + ".user_preferences"
-            , Context.MODE_PRIVATE
+            appPrefsFileName,
+            Context.MODE_PRIVATE
         )
         var firstRun = userPreferences.getBoolean("firstRun", true)
         if (firstRun) {
@@ -81,6 +86,11 @@ class MainActivity : AppCompatActivity() {
             // Ask user if they want a shortcut on their home screen.
             promptForShortcut(this, MainActivity::class.java)
         }
+        displayTheme = userPreferences.getInt("displayTheme", R.string.light_theme)
+        if (displayTheme == R.string.light_theme)
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        else
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
 
         toolbar.overflowIcon = ContextCompat.getDrawable(
             this, R.drawable.vert_ellipsis_light_img)
@@ -337,7 +347,22 @@ class MainActivity : AppCompatActivity() {
             .show()
 
     }
+    private fun changeDisplayTheme(newTheme : String) {
+        // if currentName is dark, select dark theme.
+        val n = newTheme
+        Log.d("menu:new 1", String.format("%s -> %s, 0x%08x",n, resources.getString(displayTheme),  displayTheme))
 
+        if (newTheme == resources.getString(R.string.light_theme))
+            displayTheme = R.string.light_theme
+        else
+            displayTheme = R.string.dark_theme
+        getSharedPreferences(appPrefsFileName, Context.MODE_PRIVATE)
+            .edit()
+            .putInt("displayTheme", displayTheme)
+            .commit()
+        recreate()
+        Log.d("menu:new 2", String.format("%s -> %s, 0x%08x",n, resources.getString(displayTheme), displayTheme))
+    }
     // Menu item selected listener.
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         var rv = true
@@ -348,20 +373,31 @@ class MainActivity : AppCompatActivity() {
             R.id.new_file_item -> newFile()
             R.id.file_properties_item -> displayFileProperties()
             R.id.build_info_item -> displayBuildInfo(this)
+            R.id.select_display_theme -> changeDisplayTheme(item.title.toString())
             else -> rv = super.onOptionsItemSelected(item);
         }
         return rv
     }
 
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
-        // disable save unless we have a file.
-        menu!!
-            .findItem(R.id.save_file_item)
-            .isEnabled = currentFileProperties.uri != ""
-        menu!!
-            .findItem(R.id.save_as_file_item)
-            .isEnabled = currentFileProperties.uri != ""
-        return true
+        menu?.apply() {
+            Log.d("menu:pre", String.format("=%s", findItem(R.id.select_display_theme).title))
+
+            // disable save unless we have a file.
+            findItem(R.id.save_file_item)
+                .isEnabled = currentFileProperties.uri != ""
+            findItem(R.id.save_as_file_item)
+                .isEnabled = currentFileProperties.uri != ""
+            findItem(R.id.select_display_theme)
+                .setTitle(
+                    if (displayTheme == R.string.light_theme)
+                        R.string.dark_theme
+                    else
+                        R.string.light_theme
+                )
+            Log.d("menu:post", String.format("=%s. 0x%08x", findItem(R.id.select_display_theme).title, displayTheme))
+        }
+        return super.onPrepareOptionsMenu(menu)
     }
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         val inflater = menuInflater

@@ -39,5 +39,7 @@
     <string name="file_properties">File Properties</string>
     <string name="save_as_file">Save File As</string>
     <string name="saveFormat">Saved %1$s\n%2$d bytes</string>
+    <string name="dark_theme">Select Dark Theme</string>
+    <string name="light_theme">Select Light Theme</string>
 
 </resources>

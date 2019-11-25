@@ -17,9 +17,5 @@
     *  and limitations under the License.
     -->
 <resources>
-    <color name="colorPrimary">#63280B</color>
-    <color name="colorPrimaryDark">#63280B</color>
-    <color name="colorAccent">#F3870C</color>
-
-    <color name="file_edit_window_bg">#AAAAAA</color>
+    <color name="file_edit_window_bg">#303030</color>
 </resources>
