@@ -21,24 +21,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <EditText
-        android:id="@+id/fileText"
+    <FrameLayout
+        android:id="@+id/fragment_placeholder"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_margin="10dp"
+
         android:background="@color/file_edit_window_bg"
-        android:clickable="true"
-        android:ems="10"
-        android:focusable="true"
-        android:gravity="start"
-        android:inputType="textMultiLine"
-        android:isScrollContainer="true"
-        android:padding="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/toolbar">
+        app:layout_constraintTop_toBottomOf="@+id/toolbar" />
 
-        <requestFocus />
-    </EditText>
 </androidx.constraintlayout.widget.ConstraintLayout>

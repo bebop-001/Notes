@@ -64,7 +64,7 @@ class MainActivity : AppCompatActivity() {
     val userPreferences : SharedPreferences
     get() = _userPreferences
 
-    var currentFileProperties = FileProperties()
+    // sjs var currentFileProperties = FileProperties()
 
     private val CREATE_REQUEST_CODE = 40
     private val OPEN_REQUEST_CODE = 41
@@ -92,38 +92,22 @@ class MainActivity : AppCompatActivity() {
         else
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
 
+        val editFrag0 = EditWindow.newInstance("hello world")
+
+        val manager = supportFragmentManager
+        val transaction = manager.beginTransaction()
+        transaction.add(R.id.fragment_placeholder, editFrag0)
+        transaction.commit()
+
+
         toolbar.overflowIcon = ContextCompat.getDrawable(
             this, R.drawable.vert_ellipsis_light_img)
         setSupportActionBar(toolbar)
         supportActionBar!!.setLogo(R.mipmap.notes_launcher)
         supportActionBar!!.title = ""
 
-        fileText.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(
-                s: CharSequence, start: Int, count: Int, after: Int) {
-                Log.d("TextListener", "beforeTextChanged")
-            }
-            override fun onTextChanged(
-                s: CharSequence, start: Int, before: Int, count: Int) {
-                Log.d("TextListener", "onTextChanged")
-            }
-            override fun afterTextChanged(s: Editable) {
-                Log.d("TextListener", "afterTextChanged")
-            }
-        })
-        // Things work ok with listener commented out.  for demo only.
-        fileText.setOnTouchListener { v, event ->
-            Log.d("OnTouch:", String.format("event=%s", event.toString()))
-            // imm.showSoftInput(v, InputMethodManager.SHOW_FORCED)
-            false // set false indicating listener handeled event.
-        }
-        // for demo
-        fileText.setOnFocusChangeListener { v, hasFocus ->
-            Log.d("OnFocusChangeListener"
-                , String.format("hasFocus:%s", hasFocus.toString()))
-        }
     }
-
+/* sjs
     fun newFile() {
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
 
@@ -347,6 +331,8 @@ class MainActivity : AppCompatActivity() {
             .show()
 
     }
+
+ */
     private fun changeDisplayTheme(newTheme : String) {
         // if currentName is dark, select dark theme.
         val n = newTheme
@@ -367,11 +353,19 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         var rv = true
         when (item.itemId) {
+            /*
             R.id.save_file_item -> saveFile()
             R.id.save_as_file_item -> saveFileAs()
             R.id.open_file_item -> openFile()
             R.id.new_file_item -> newFile()
             R.id.file_properties_item -> displayFileProperties()
+             */
+            R.id.save_file_item -> kToast(this, "Save File")
+            R.id.save_as_file_item -> kToast(this, "Save File As")
+            R.id.open_file_item -> kToast(this, "Open File")
+            R.id.new_file_item -> kToast(this, "New File")
+            R.id.file_properties_item -> kToast(this, "File Properties")
+
             R.id.build_info_item -> displayBuildInfo(this)
             R.id.select_display_theme -> changeDisplayTheme(item.title.toString())
             else -> rv = super.onOptionsItemSelected(item);
@@ -384,10 +378,13 @@ class MainActivity : AppCompatActivity() {
             Log.d("menu:pre", String.format("=%s", findItem(R.id.select_display_theme).title))
 
             // disable save unless we have a file.
+            /* sjs
             findItem(R.id.save_file_item)
                 .isEnabled = currentFileProperties.uri != ""
             findItem(R.id.save_as_file_item)
                 .isEnabled = currentFileProperties.uri != ""
+
+             */
             findItem(R.id.select_display_theme)
                 .setTitle(
                     if (displayTheme == R.string.light_theme)

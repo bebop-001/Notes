@@ -20,16 +20,16 @@
     <string name="save_file">Save File</string>
 
     <string name="build_info">Build Info...</string>
-    <string name="build_info_query" >
+    <string name="build_info_query">
         &lt;html&gt;%1$s
         &lt;br&gt;Version(%2$d, %3$s)
         &lt;br&gt;Build date:   %4$s
         &lt;br&gt;Install date: %5$s
-        &lt;br&gt;Build info: %6$s
+        &lt;br&gt;Build type: %6$s
         &lt;br&gt;Git branch: %7$s
         &lt;/html&gt;
     </string>
-    <string name="file_properties_format" >
+    <string name="file_properties_format">
         &lt;html&gt;File name: %1$s
         &lt;br&gt;Size %2$d bytes
         &lt;br&gt;Modified %3$s
@@ -41,5 +41,8 @@
     <string name="saveFormat">Saved %1$s\n%2$d bytes</string>
     <string name="dark_theme">Select Dark Theme</string>
     <string name="light_theme">Select Light Theme</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>
