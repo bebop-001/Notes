@@ -127,7 +127,7 @@ fun Toast._setGravity(gravity: Int) : Toast {
     return this
 }
 fun kToast(context : Context, message: String) {
-    val toast = Toast.makeText(context, message, Toast.LENGTH_LONG)
+    Toast.makeText(context, message, Toast.LENGTH_LONG)
         ._setGravity(Gravity.CENTER_VERTICAL or Gravity.CENTER_HORIZONTAL)
         .show()
 }
