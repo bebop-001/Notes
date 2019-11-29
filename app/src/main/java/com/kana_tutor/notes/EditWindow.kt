@@ -1,6 +1,21 @@
+/*
+ * Copyright 2019 Steven Smith kana-tutor.com
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.kana_tutor.notes
 
-import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
@@ -11,18 +26,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import com.kana_tutor.notes.kanautils.kToast
+import java.io.BufferedReader
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.InputStreamReader
 
-/**
- * A simple [Fragment] subclass.
- * Activities that contain this fragment must implement the
- * [EditWindow.OnFragmentInteractionListener] interface
- * to handle interaction events.
- * Use the [EditWindow.newInstance] factory method to
- * create an instance of this fragment.
- */
 class EditWindow : Fragment() {
     private var stringUri: String? = null
-    private var listener: OnFragmentInteractionListener? = null
+    var currentFileProperties = FileProperties()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,16 +43,17 @@ class EditWindow : Fragment() {
         }
     }
 
+    private lateinit var editWindowTV: TextView
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
         val view =  inflater.inflate(R.layout.edit_window, container, false)
-        val editWindow = view.findViewById<TextView>(R.id.edit_window_tv)
-        editWindow.text = stringUri
+        editWindowTV = view.findViewById(R.id.edit_window_tv)
 
-        editWindow.addTextChangedListener(object : TextWatcher {
+        editWindowTV.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(
                 s: CharSequence, start: Int, count: Int, after: Int) {
                 Log.d("TextListener", "beforeTextChanged")
@@ -54,13 +67,13 @@ class EditWindow : Fragment() {
             }
         })
         // Things work ok with listener commented out.  for demo only.
-        editWindow.setOnTouchListener { v, event ->
+        editWindowTV.setOnTouchListener { v, event ->
             Log.d("OnTouch:", String.format("event=%s", event.toString()))
             // imm.showSoftInput(v, InputMethodManager.SHOW_FORCED)
-            false // set false indicating listener handeled event.
+            false // set false indicating listener handled event.
         }
         // for demo
-        editWindow.setOnFocusChangeListener { v, hasFocus ->
+        editWindowTV.setOnFocusChangeListener { v, hasFocus ->
             Log.d("OnFocusChangeListener"
                 , String.format("hasFocus:%s", hasFocus.toString()))
         }
@@ -68,38 +81,81 @@ class EditWindow : Fragment() {
         return view
     }
 
-    /*
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        if (context is OnFragmentInteractionListener) {
-            listener = context
-        } else {
-            throw RuntimeException(context.toString() + " must implement OnFragmentInteractionListener")
+    private fun saveToUri(uri : Uri, whoResId : Int) {
+        val pfd = context!!
+            .contentResolver
+            .openFileDescriptor(uri, "w")
+        if (pfd != null) {
+            try {
+                val fileOutputStream = FileOutputStream(
+                    pfd.fileDescriptor
+                )
+                val textContent = editWindowTV.text.toString()
+                fileOutputStream.write(textContent.toByteArray())
+                fileOutputStream.close()
+                currentFileProperties = FileProperties(context!!, uri)
+                Log.d("saveToUri:", currentFileProperties.toString())
+                kToast(
+                    this.context!!, getString(
+                        R.string.read_write_toast_fmt, getString(whoResId)
+                        , getString(R.string.wrote), currentFileProperties.displayName
+                        , currentFileProperties.size
+                    )
+                )
+            } catch (e: IOException) {
+                throw RuntimeException(
+                    "Open for write failed:" + e.message + e.stackTrace
+                )
+            }
+        }
+        else
+            throw RuntimeException(
+                this.context!!.getString(R.string.save_uri_failed, uri.toString())
+            )
+    }
+    fun newFile(uri: Uri) {
+        // unless there is a file open, clear the edit text view.
+        if (! currentFileProperties.isEmpty) editWindowTV.text = ""
+        saveToUri(uri, R.string.new_file)
+        currentFileProperties = FileProperties(context!!, uri)
+
+        Log.d("newFileContents:", currentFileProperties.toString())
+    }
+    fun openFile(uri:Uri) {
+        try {
+            Log.d("readFileContent", currentFileProperties.toString())
+            val inputStream = context!!.contentResolver.openInputStream(uri)!!
+            val reader = BufferedReader(InputStreamReader(inputStream))
+            val stringBuilder = StringBuilder()
+
+            var currentLine = reader.readLine()
+
+            while (currentLine != null) {
+                stringBuilder.append(currentLine + "\n")
+                currentLine = reader.readLine()
+            }
+            inputStream.close()
+            editWindowTV.text = stringBuilder.toString()
+            currentFileProperties = FileProperties(context!!, uri)
+            kToast(
+                this.context!!, getString(
+                    R.string.read_write_toast_fmt, getString(R.string.open_file)
+                    , getString(R.string.read)
+                    , currentFileProperties.displayName, currentFileProperties.size
+                )
+            )
+
+            Log.d("openFile:", currentFileProperties.toString())
+        } catch (e: IOException) {
+            throw RuntimeException(
+                "Open for read failed:" + e.message + e.stackTrace)
         }
     }
-
-     */
-
-    override fun onDetach() {
-        super.onDetach()
-        listener = null
+    fun saveFile() {
+        val currentUri = Uri.parse(currentFileProperties.uri)
+        saveToUri(currentUri, R.string.save_file)
     }
-
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     *
-     *
-     * See the Android Training lesson [Communicating with Other Fragments]
-     * (http://developer.android.com/training/basics/fragments/communicating.html)
-     * for more information.
-     */
-    interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        fun onFragmentInteraction(uri: Uri)
-    }
+    fun saveAs(uri : Uri) = saveToUri(uri, R.string.save_as_file)
 
     companion object {
         /*
