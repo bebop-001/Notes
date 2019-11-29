@@ -22,4 +22,6 @@
     <color name="colorAccent">#F3870C</color>
 
     <color name="file_edit_window_bg">#FFFFFF</color>
+    <color name="file_edit_window_font_color">#FF000000</color>
+
 </resources>

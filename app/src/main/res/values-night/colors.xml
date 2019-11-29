@@ -18,4 +18,6 @@
     -->
 <resources>
     <color name="file_edit_window_bg">#303030</color>
+    <color name="file_edit_window_font_color">#FFFFFFFF</color>
+
 </resources>
