@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="usage_string"><![CDATA[
+    <html>
+        <font color=\"#%1$06x\">
+            Version: %2$s
+            <br><br>Usage for %3$s
+            <ul>
+                <li><b>New File</b>
+                <ul>
+                    <li>For an un-named file assign it as the new name</li>
+                    <li>For an named file, create a new empty file and
+                        assign it as the new name</li>
+                    </li>
+                </ul>
+            </ul>
+        </font>
+    </html>
+    ]]>
+    </string>
+</resources>
