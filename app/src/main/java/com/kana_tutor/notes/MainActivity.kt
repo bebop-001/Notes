@@ -1,5 +1,5 @@
 /*
- *  Copyright 2018 Steven Smith kana-tutor.com
+ *  Copyright 2019 Steven Smith kana-tutor.com
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -25,13 +25,9 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 
 import android.database.Cursor
-import android.graphics.Typeface
-import android.view.View
 import android.net.Uri
 import android.os.Build
 import android.os.ParcelFileDescriptor
-import android.text.Editable
-import android.text.TextWatcher
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -43,33 +39,90 @@ import com.kana_tutor.notes.kanautils.promptForShortcut
 import kotlinx.android.synthetic.main.activity_main.*
 import android.provider.DocumentsContract.Document.*
 import android.system.Os
-import android.util.TypedValue
-import android.view.Gravity
-import android.widget.TextView
+import android.webkit.WebView
 import androidx.appcompat.app.AppCompatDelegate
-import com.kana_tutor.notes.kanautils.kToast
+import com.kana_tutor.notes.kanautils.displayUsage
 import java.io.*
-import java.net.URLEncoder.encode
-import java.text.SimpleDateFormat
 import java.util.*
 
-val appPrefsFileName = "userPrefs.xml"
+class FileProperties {
+    var displayName = ""
+    var uri :String = ""
+    var size = -1
+    private var isWritable = false
+    private var lastModified = 0L
+    private var lastModifiedDate = Date(0).toString()
+    var isEmpty = true
+    private var documentId = ""
+    private var authority = ""
+    private var fileName = ""
+
+    // extension functions.
+    private fun Cursor.getKeyedString(key: String): String
+            = getString(getColumnIndex(key))
+    private fun Cursor.getKeyedInt(key: String): Int
+            = getInt(getColumnIndex(key))
+    private fun Cursor.getKeyedLong(key: String): Long
+            = getLong(getColumnIndex(key))
+    constructor(context : Context, uri : Uri) {
+        val c = context.contentResolver.query(
+            uri, null, null, null, null)
+        c?.apply {
+            moveToFirst()
+            size = getKeyedInt(COLUMN_SIZE)
+            displayName = getKeyedString(COLUMN_DISPLAY_NAME)
+            lastModified = getKeyedLong(COLUMN_LAST_MODIFIED)
+            lastModifiedDate = Date(lastModified).toString()
+            isWritable = (getKeyedInt(COLUMN_FLAGS) and FLAG_SUPPORTS_WRITE) != 0
+            documentId = getKeyedString(COLUMN_DOCUMENT_ID)
+            authority = uri.authority.toString()
+            isEmpty = false
+        }
+        c?.close()
+        // based on code from https://stackoverflow.com/questions/30546441/
+        // android-open-file-with-intent-chooser-from-uri-obtained-by-storage-access-frame
+        val pf : ParcelFileDescriptor? = context.contentResolver.openFileDescriptor(uri, "r")
+        if (pf != null) {
+            val procFile = File("/proc/self/fd/" + pf.fd)
+            fileName  = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+                Os.readlink(procFile.toString())
+            else
+                procFile.canonicalPath
+        }
+        this.uri = uri.toString()
+    }
+    // return empty file properties.
+    constructor()
+    override fun toString(): String {
+        return String.format(
+            "%s:size=%d,isWritable:%b,lastModifiedDate:%s,id=\"%s\"uri=\"%s\", fileName=\"%s\""
+            , displayName, size, isWritable, lastModifiedDate,documentId, uri, fileName
+        )
+    }
+    fun formatedProperties(activity : Activity) : String {
+        return String.format(
+            activity.getString(R.string.file_properties_format)
+            , ContextCompat.getColor(
+                activity, R.color.file_edit_window_font_color) and 0x00FFFFFF
+            , displayName, size, lastModifiedDate, isWritable)
+    }
+}
+
+const val CREATE_REQUEST_CODE = 40
+const val OPEN_REQUEST_CODE = 41
+const val SAVE_AS_REQUEST_CODE = 42
+
+const val appPrefsFileName = "userPrefs.xml"
 class MainActivity : AppCompatActivity() {
 
     companion object {
         var displayTheme = 0 // for light or dark theme.
+        private lateinit var currentEditWindow : EditWindow
     }
 
-        private lateinit var _userPreferences : SharedPreferences
-    val userPreferences : SharedPreferences
+    private lateinit var _userPreferences : SharedPreferences
+    private val userPreferences : SharedPreferences
     get() = _userPreferences
-
-    // sjs var currentFileProperties = FileProperties()
-
-    private val CREATE_REQUEST_CODE = 40
-    private val OPEN_REQUEST_CODE = 41
-    private val SAVE_REQUEST_CODE = 42
-    private val SAVE_AS_REQUEST_CODE = 43
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,7 +131,7 @@ class MainActivity : AppCompatActivity() {
             appPrefsFileName,
             Context.MODE_PRIVATE
         )
-        var firstRun = userPreferences.getBoolean("firstRun", true)
+        val firstRun = userPreferences.getBoolean("firstRun", true)
         if (firstRun) {
             userPreferences.edit()
                 .putBoolean("firstRun", false)
@@ -92,11 +145,11 @@ class MainActivity : AppCompatActivity() {
         else
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
 
-        val editFrag0 = EditWindow.newInstance("hello world")
+        currentEditWindow = EditWindow.newInstance("hello world")
 
         val manager = supportFragmentManager
         val transaction = manager.beginTransaction()
-        transaction.add(R.id.fragment_placeholder, editFrag0)
+        transaction.add(R.id.fragment_placeholder, currentEditWindow)
         transaction.commit()
 
 
@@ -107,205 +160,58 @@ class MainActivity : AppCompatActivity() {
         supportActionBar!!.title = ""
 
     }
-/* sjs
-    fun newFile() {
+    private fun newFile() {
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
 
         intent.addCategory(Intent.CATEGORY_OPENABLE)
         intent.type = "text/plain"
-        intent.putExtra(Intent.EXTRA_TITLE, "newfile.txt")
+        intent.putExtra(Intent.EXTRA_TITLE, "")
 
         startActivityForResult(intent, CREATE_REQUEST_CODE)
     }
-    fun saveFile() {
-        val currentUri = Uri.parse(currentFileProperties.uri)
-        val pfd = contentResolver.openFileDescriptor(currentUri, "w")
-        if (pfd != null) {
-            val fileOutputStream = FileOutputStream(
-                pfd.fileDescriptor
-            )
-            val textContent = fileText.text.toString()
-            fileOutputStream.write(textContent.toByteArray())
-            fileOutputStream.close()
-            currentFileProperties = FileProperties(this,currentUri)
-            kToast(this, getString(R.string.saveFormat
-                , currentFileProperties.displayName, currentFileProperties.size))
-        }
-        else {
-            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
-            intent.addCategory(Intent.CATEGORY_OPENABLE)
-            intent.type = "text/plain"
-
-            startActivityForResult(intent, SAVE_REQUEST_CODE)
-        }
-    }
-    fun saveFileAs() {
-        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
-        intent.addCategory(Intent.CATEGORY_OPENABLE)
-        intent.type = "text/plain"
-
-        startActivityForResult(intent, SAVE_AS_REQUEST_CODE)
-    }
-    private fun newFileContent(uri: Uri) {
-        currentFileProperties = FileProperties(this, uri)
-        supportActionBar!!.title = currentFileProperties.displayName
-        Log.d("newFileContents:", currentFileProperties.toString())
-        fileText.setText("")
-    }
-
-    private fun writeFileContent(uri: Uri) {
-        try {
-            val pfd = contentResolver.openFileDescriptor(uri, "w")
-            currentFileProperties = FileProperties(this, uri)
-            Log.d("writeFileContent", currentFileProperties.toString())
-
-            supportActionBar!!.title = currentFileProperties.displayName
-
-            val fileOutputStream = FileOutputStream(
-                pfd?.fileDescriptor)
-
-            val textContent = fileText.text.toString()
-
-            fileOutputStream.write(textContent.toByteArray())
-
-            fileOutputStream.close()
-            pfd?.close()
-        } catch (e: Throwable) {
-            e.printStackTrace()
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-    }
-    fun openFile() {
+    private fun openFile() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
         intent.addCategory(Intent.CATEGORY_OPENABLE)
         intent.type = "text/plain"
         startActivityForResult(intent, OPEN_REQUEST_CODE)
     }
+    private fun saveFileAs() {
+        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
+        intent.addCategory(Intent.CATEGORY_OPENABLE)
+        intent.type = "text/plain"
 
-    private fun Cursor.getKeyedString(key: String): String
-            = getString(getColumnIndex(key))
-    private fun Cursor.getKeyedInt(key: String): Int
-            = getInt(getColumnIndex(key))
-    private fun Cursor.getKeyedLong(key: String): Long
-            = getLong(getColumnIndex(key))
-
-    inner class FileProperties {
-        var displayName = ""
-        var uri :String = ""
-        var size = -1
-        var isWritable = false
-        var lastModified = 0L
-        var lastModifiedDate = Date(0).toString()
-        var isInitialized = false
-        var documentId = ""
-        var authority = ""
-        var fileName = ""
-
-        constructor(a : AppCompatActivity, uri : Uri) {
-            val c = a.contentResolver.query(
-                uri, null, null, null, null)
-            c?.apply {
-                moveToFirst()
-                size = getKeyedInt(COLUMN_SIZE)
-                displayName = getKeyedString(COLUMN_DISPLAY_NAME)
-                lastModified = getKeyedLong(COLUMN_LAST_MODIFIED)
-                lastModifiedDate = Date(lastModified).toString()
-                isWritable = (getKeyedInt(COLUMN_FLAGS) and FLAG_SUPPORTS_WRITE) != 0
-                documentId = getKeyedString(COLUMN_DOCUMENT_ID)
-                authority = uri.authority.toString()
-                isInitialized = true
-            }
-            // based on code from https://stackoverflow.com/questions/30546441/
-            // android-open-file-with-intent-chooser-from-uri-obtained-by-storage-access-frame
-            val pf : ParcelFileDescriptor? = contentResolver.openFileDescriptor(uri, "r")
-            if (pf != null) {
-                val procFile = File("/proc/self/fd/" + pf.fd)
-                fileName  = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-                    Os.readlink(procFile.toString())
-                else
-                    procFile.canonicalPath
-            }
-            this.uri = uri.toString()
-        }
-        // return empty file properties.
-        constructor()
-        override fun toString(): String {
-            return String.format(
-                "%s:size=%d,isWritable:%b,lastModifiedDate:%s,id=\"%s\"uri=\"%s\", fileName=\"%s\""
-                    , displayName, size, isWritable, lastModifiedDate,documentId, uri, fileName
-            )
-            return super.toString()
-        }
-        fun formatedProperties(activity : Activity) : String {
-            return String.format(activity.getString(R.string.file_properties_format)
-                , displayName, size, lastModifiedDate, isWritable)
-        }
-    }
-
-
-    private fun readFileContent(uri: Uri): String {
-        currentFileProperties = FileProperties(this, uri)
-        Log.d("readFileContent", currentFileProperties.toString())
-        supportActionBar!!.title = currentFileProperties.displayName
-        val inputStream = contentResolver.openInputStream(uri)
-        val reader = BufferedReader(InputStreamReader(inputStream))
-        val stringBuilder = StringBuilder()
-
-        var currentline = reader.readLine()
-
-        while (currentline != null) {
-            stringBuilder.append(currentline + "\n")
-            currentline = reader.readLine()
-        }
-        inputStream?.close()
-        return stringBuilder.toString()
+        startActivityForResult(intent, SAVE_AS_REQUEST_CODE)
     }
 
     public override fun onActivityResult(requestCode: Int, resultCode: Int,
                                          resultData: Intent?) {
         super.onActivityResult(requestCode, resultCode, resultData)
 
-        var currentUri: Uri?
-
         if (resultCode == Activity.RESULT_OK) {
             when (requestCode) {
                 CREATE_REQUEST_CODE -> {
-                    resultData?.let {
-                        currentUri = it.data
-                        currentUri?.let {
-                            newFileContent(it)
-                        }
-                    }
-                }
-                SAVE_REQUEST_CODE -> {
-                    resultData?.let {
-                        currentUri = it.data
-                        currentUri?.let {
-                            writeFileContent(it)
-                        }
+                    if (resultData != null && resultData.data != null) {
+                        val uri = resultData.data!!
+                        currentEditWindow.newFile(uri)
+                        supportActionBar!!.title =
+                            currentEditWindow.currentFileProperties.displayName
                     }
                 }
                 SAVE_AS_REQUEST_CODE -> {
-                    resultData?.let {
-                        currentUri = it.data
-                        currentUri?.let {
-                            writeFileContent(it)
-                        }
+                    if (resultData != null && resultData.data != null) {
+                        val uri = resultData.data!!
+                        currentEditWindow.saveAs(uri)
+                        supportActionBar!!.title =
+                            currentEditWindow.currentFileProperties.displayName
                     }
                 }
                 OPEN_REQUEST_CODE -> {
-                    resultData?.let {
-                        currentUri = it.data
-                        currentUri?.let {
-                            try {
-                                val content = readFileContent(it)
-                                fileText.setText(content)
-                                // fileText.requestFocus()
-                            } catch (e: IOException) {
-                                throw RuntimeException("Open failed:" + e.message + e.stackTrace)
-                            }
-                        }
+                    if (resultData != null && resultData.data != null) {
+                        val uri = resultData.data!!
+                        currentEditWindow.openFile(uri)
+                        supportActionBar!!.title =
+                            currentEditWindow.currentFileProperties.displayName
+
                     }
                 }
                 else -> throw RuntimeException(String.format("onActivityResult" +
@@ -316,73 +222,57 @@ class MainActivity : AppCompatActivity() {
         }
     }
     private fun displayFileProperties() {
-        val htmlString = currentFileProperties
+        val webview = WebView(this)
+        webview.setBackgroundColor(ContextCompat.getColor(this, R.color.file_edit_window_bg))
+        webview.loadData(currentEditWindow
+            .currentFileProperties
             .formatedProperties(this)
-        val textView = TextView(this)
-        textView.apply {
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 20.0f)
-            setTypeface(null, Typeface.BOLD)
-            text = com.kana_tutor.notes.kanautils.htmlString(htmlString)
-            gravity = Gravity.CENTER
-        }
-
+            , "text/html", "utf-8"
+        )
         androidx.appcompat.app.AlertDialog.Builder(this)
-            .setView(textView)
+            .setView(webview)
             .show()
 
     }
 
- */
     private fun changeDisplayTheme(newTheme : String) {
         // if currentName is dark, select dark theme.
-        val n = newTheme
-        Log.d("menu:new 1", String.format("%s -> %s, 0x%08x",n, resources.getString(displayTheme),  displayTheme))
-
+        displayTheme = R.string.dark_theme
         if (newTheme == resources.getString(R.string.light_theme))
             displayTheme = R.string.light_theme
-        else
-            displayTheme = R.string.dark_theme
         getSharedPreferences(appPrefsFileName, Context.MODE_PRIVATE)
             .edit()
             .putInt("displayTheme", displayTheme)
-            .commit()
+            .apply()
         recreate()
-        Log.d("menu:new 2", String.format("%s -> %s, 0x%08x",n, resources.getString(displayTheme), displayTheme))
     }
     // Menu item selected listener.
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         var rv = true
         when (item.itemId) {
-            /*
-            R.id.save_file_item -> saveFile()
+            R.id.save_file_item -> currentEditWindow.saveFile()
             R.id.save_as_file_item -> saveFileAs()
             R.id.open_file_item -> openFile()
             R.id.new_file_item -> newFile()
             R.id.file_properties_item -> displayFileProperties()
-             */
-            R.id.save_file_item -> kToast(this, "Save File")
-            R.id.save_as_file_item -> kToast(this, "Save File As")
-            R.id.open_file_item -> kToast(this, "Open File")
-            R.id.new_file_item -> kToast(this, "New File")
-            R.id.file_properties_item -> kToast(this, "File Properties")
-
             R.id.build_info_item -> displayBuildInfo(this)
+            R.id.usage_item -> displayUsage(this)
             R.id.select_display_theme -> changeDisplayTheme(item.title.toString())
-            else -> rv = super.onOptionsItemSelected(item);
+            else -> rv = super.onOptionsItemSelected(item)
         }
         return rv
     }
 
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
-        menu?.apply() {
+        menu?.apply {
             Log.d("menu:pre", String.format("=%s", findItem(R.id.select_display_theme).title))
 
             // disable save unless we have a file.
-            /* sjs
-            findItem(R.id.save_file_item)
-                .isEnabled = currentFileProperties.uri != ""
-            findItem(R.id.save_as_file_item)
-                .isEnabled = currentFileProperties.uri != ""
+            findItem(R.id.save_file_item).isEnabled =
+                !currentEditWindow.currentFileProperties.isEmpty
+            /*
+            findItem(R.id.save_as_file_item).isEnabled =
+                !currentEditWindow.currentFileProperties.isEmpty
 
              */
             findItem(R.id.select_display_theme)
