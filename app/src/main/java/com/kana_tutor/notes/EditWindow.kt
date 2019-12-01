@@ -16,6 +16,7 @@
 
 package com.kana_tutor.notes
 
+import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
@@ -25,8 +26,11 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ScrollView
+import android.widget.ShareActionProvider
 import android.widget.TextView
 import com.kana_tutor.notes.kanautils.kToast
+import kotlinx.android.synthetic.main.edit_window.*
 import java.io.BufferedReader
 import java.io.FileOutputStream
 import java.io.IOException
@@ -44,6 +48,7 @@ class EditWindow : Fragment() {
     }
 
     private lateinit var editWindowTV: TextView
+    private lateinit var scrollView: ScrollView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -52,7 +57,20 @@ class EditWindow : Fragment() {
         // Inflate the layout for this fragment
         val view =  inflater.inflate(R.layout.edit_window, container, false)
         editWindowTV = view.findViewById(R.id.edit_window_tv)
+        scrollView = view.findViewById(R.id.edit_window_scrollview)
 
+        editWindowTV.addOnLayoutChangeListener(
+            fun (v: View,
+                left: Int, top: Int, right: Int, bottom: Int,
+                oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) {
+                Log.d("onLayoutChanged:",
+                    String.format("left%d, top:%d, right:%d, bottom:%d",
+                        left, top, right, bottom))
+                Log.d("onLayoutChanged:OLD",
+                    String.format("left%d, top:%d, right:%d, bottom:%d",
+                        oldLeft, oldTop, oldRight, oldBottom))
+            }
+        )
         editWindowTV.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(
                 s: CharSequence, start: Int, count: Int, after: Int) {
@@ -70,6 +88,7 @@ class EditWindow : Fragment() {
         editWindowTV.setOnTouchListener { v, event ->
             Log.d("OnTouch:", String.format("event=%s", event.toString()))
             // imm.showSoftInput(v, InputMethodManager.SHOW_FORCED)
+
             false // set false indicating listener handled event.
         }
         // for demo
@@ -77,10 +96,8 @@ class EditWindow : Fragment() {
             Log.d("OnFocusChangeListener"
                 , String.format("hasFocus:%s", hasFocus.toString()))
         }
-
         return view
     }
-
     private fun saveToUri(uri : Uri, whoResId : Int) {
         val pfd = context!!
             .contentResolver
@@ -136,6 +153,7 @@ class EditWindow : Fragment() {
             }
             inputStream.close()
             editWindowTV.text = stringBuilder.toString()
+
             currentFileProperties = FileProperties(context!!, uri)
             kToast(
                 this.context!!, getString(

@@ -1,21 +1,22 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/edit_window_scrollview"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fillViewport="true"
     tools:context="com.kana_tutor.notes.EditWindow">
 
-    <EditText
-        android:id="@+id/edit_window_tv"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/file_edit_window_bg"
-        android:clickable="true"
-        android:ems="10"
-        android:focusable="true"
-        android:gravity="start"
-        android:inputType="textMultiLine"
-        android:isScrollContainer="true"
-        android:padding="10dp"
-        />
+        <EditText
+            android:id="@+id/edit_window_tv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/file_edit_window_bg"
+            android:clickable="true"
+            android:ems="10"
+            android:focusable="true"
+            android:gravity="start"
+            android:inputType="textMultiLine"
+            android:padding="10dp" />
 
-</FrameLayout>
+</ScrollView>
