@@ -36,8 +36,8 @@
         <html><center>
         <font color=\"#%1$06x\">
         File name: \"%2$s\"
-        <br>Size %3$d bytes
-        <br>Modified %4$s
+        <br>Size: %3$d bytes
+        <br>Modified: %4$s
         <br>Writable: %5$b
         </font></center>
         </html>
@@ -54,5 +54,9 @@
 
     <string name="usage">Usage</string>
     <string name="save_uri_failed">Save URI to %1$s FAILED.</string>
+
+    <string name="is_writable">🔓 Read/Write</string>
+    <string name="is_read_only">🔒 Read Only</string>
+    <string name="is_write_protected">Sorry. Media is write-protected by OS.</string>
 
 </resources>

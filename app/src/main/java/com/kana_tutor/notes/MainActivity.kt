@@ -42,6 +42,7 @@ import android.system.Os
 import android.webkit.WebView
 import androidx.appcompat.app.AppCompatDelegate
 import com.kana_tutor.notes.kanautils.displayUsage
+import com.kana_tutor.notes.kanautils.kToast
 import java.io.*
 import java.util.*
 
@@ -49,13 +50,14 @@ class FileProperties {
     var displayName = ""
     var uri :String = ""
     var size = -1
-    private var isWritable = false
+    var isWritable = false
+    var internalWriteProtect = false
     private var lastModified = 0L
     private var lastModifiedDate = Date(0).toString()
     var isEmpty = true
     private var documentId = ""
     private var authority = ""
-    private var fileName = ""
+    var fileName = ""
 
     // extension functions.
     private fun Cursor.getKeyedString(key: String): String
@@ -100,11 +102,12 @@ class FileProperties {
         )
     }
     fun formatedProperties(activity : Activity) : String {
+        val writable = !isEmpty && isWritable && !internalWriteProtect
         return String.format(
             activity.getString(R.string.file_properties_format)
             , ContextCompat.getColor(
                 activity, R.color.file_edit_window_font_color) and 0x00FFFFFF
-            , displayName, size, lastModifiedDate, isWritable)
+            , displayName, size, lastModifiedDate, writable)
     }
 }
 
@@ -246,6 +249,10 @@ class MainActivity : AppCompatActivity() {
             .apply()
         recreate()
     }
+    private fun writeProtectFile() {
+        var fp = currentEditWindow.currentFileProperties
+        fp.internalWriteProtect = !fp.internalWriteProtect
+    }
     // Menu item selected listener.
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         var rv = true
@@ -256,6 +263,7 @@ class MainActivity : AppCompatActivity() {
             R.id.new_file_item -> newFile()
             R.id.file_properties_item -> displayFileProperties()
             R.id.build_info_item -> displayBuildInfo(this)
+            R.id.write_protect_file_item -> writeProtectFile()
             R.id.usage_item -> displayUsage(this)
             R.id.select_display_theme -> changeDisplayTheme(item.title.toString())
             else -> rv = super.onOptionsItemSelected(item)
@@ -265,24 +273,27 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
         menu?.apply {
+            val fp = currentEditWindow.currentFileProperties
             Log.d("menu:pre", String.format("=%s", findItem(R.id.select_display_theme).title))
-
-            // disable save unless we have a file.
-            findItem(R.id.save_file_item).isEnabled =
-                !currentEditWindow.currentFileProperties.isEmpty
-            /*
-            findItem(R.id.save_as_file_item).isEnabled =
-                !currentEditWindow.currentFileProperties.isEmpty
-
-             */
-            findItem(R.id.select_display_theme)
-                .setTitle(
-                    if (displayTheme == R.string.light_theme)
-                        R.string.dark_theme
-                    else
-                        R.string.light_theme
+            fp.apply {
+                val writable = !isEmpty && isWritable && !internalWriteProtect
+                // disable save unless we have a file.
+                findItem(R.id.save_file_item).isEnabled = writable
+                // findItem(R.id.save_as_file_item).isEnabled = writable
+                findItem(R.id.select_display_theme)
+                    .setTitle(
+                        if (displayTheme == R.string.light_theme)
+                            R.string.dark_theme
+                        else
+                            R.string.light_theme
+                    )
+                val writeProtectItem = findItem(R.id.write_protect_file_item)!!
+                writeProtectItem.isEnabled = !isEmpty
+                writeProtectItem.title = getString(
+                    if (writable) R.string.is_writable
+                    else R.string.is_read_only
                 )
-            Log.d("menu:post", String.format("=%s. 0x%08x", findItem(R.id.select_display_theme).title, displayTheme))
+            }
         }
         return super.onPrepareOptionsMenu(menu)
     }

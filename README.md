@@ -17,6 +17,19 @@ through whatever is current (API-29 right now)
 I can't see how to make this work under Windows so it
 currently builds only under Linux.
 
+Sun Dec  1 13:09:45 PST 2019
+Added some debug to the edit text window so I could see what the textwatcher
+is doing.  Added a "WriteProtect" item.  It doesn't actually write protect
+the file -- it seems you can't do that using the StorageAccessFramework
+which will be the only way to access files in Android 10+.  It's only a flag
+that prevents the editor from overwriting the file.  You can still alter the
+contents of the edit-text window which means you can still "SaveAs" a different
+file.  Unfortunately it also means you can "SaveAs" over the file since the
+operating system doesn't give a damn about what the app wants.
+
+I also tried a work-around that lets me see the actual file location but 
+that's disabled as well.
+
 Mon Nov 25 12:08:19 PST 2019
 Implemented Dark/Light theme.
 
