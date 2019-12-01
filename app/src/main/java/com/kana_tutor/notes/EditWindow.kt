@@ -72,13 +72,35 @@ class EditWindow : Fragment() {
             }
         )
         editWindowTV.addTextChangedListener(object : TextWatcher {
+            fun CharSequence.shortChangeMess(start:Int, count:Int) : String {
+                var rv = subSequence(start, start + count)
+                if (count > 6) {
+                    rv = subSequence(start, start + 3).toString() +
+                            "…" +
+                            subSequence(start + count - 3, start + count).toString()
+                }
+                return rv.toString()
+            }
             override fun beforeTextChanged(
                 s: CharSequence, start: Int, count: Int, after: Int) {
-                Log.d("TextListener", "beforeTextChanged")
+                if (count != s.length) {
+                    Log.d(
+                        "TextListener", String.format(
+                            "before: start %d, count %d, after %d: \"%s\""
+                            ,
+                            start, count, after, s.shortChangeMess(start, count)
+                        )
+                    )
+                }
             }
             override fun onTextChanged(
                 s: CharSequence, start: Int, before: Int, count: Int) {
-                Log.d("TextListener", "onTextChanged")
+                if (count != s.length) {
+                    Log.d("TextListener", String.format(
+                        "onChange: start %d, count %d, before %d : \"%s\""
+                        , start, count, before, s.shortChangeMess(start, count))
+                    )
+                }
             }
             override fun afterTextChanged(s: Editable) {
                 Log.d("TextListener", "afterTextChanged")
