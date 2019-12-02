@@ -90,67 +90,10 @@ class MainActivity : AppCompatActivity() {
         supportActionBar!!.setLogo(R.mipmap.notes_launcher)
         supportActionBar!!.title = ""
     }
-    private fun newFile() {
-        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
-
-        intent.addCategory(Intent.CATEGORY_OPENABLE)
-        intent.type = "text/plain"
-        intent.putExtra(Intent.EXTRA_TITLE, "")
-
-        startActivityForResult(intent, CREATE_REQUEST_CODE)
-    }
-    private fun openFile() {
-        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
-        intent.addCategory(Intent.CATEGORY_OPENABLE)
-        intent.type = "text/plain"
-        startActivityForResult(intent, OPEN_REQUEST_CODE)
-    }
-    private fun saveFileAs() {
-        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
-        intent.addCategory(Intent.CATEGORY_OPENABLE)
-        intent.type = "text/plain"
-
-        startActivityForResult(intent, SAVE_AS_REQUEST_CODE)
+    fun setActionBarTitle(title:String) {
+        supportActionBar!!.title = title
     }
 
-    public override fun onActivityResult(requestCode: Int, resultCode: Int,
-                                         resultData: Intent?) {
-        super.onActivityResult(requestCode, resultCode, resultData)
-
-        if (resultCode == Activity.RESULT_OK) {
-            when (requestCode) {
-                CREATE_REQUEST_CODE -> {
-                    if (resultData != null && resultData.data != null) {
-                        val uri = resultData.data!!
-                        currentEditWindow.newFile(uri)
-                        supportActionBar!!.title =
-                            currentEditWindow.currentFileProperties.displayName
-                    }
-                }
-                SAVE_AS_REQUEST_CODE -> {
-                    if (resultData != null && resultData.data != null) {
-                        val uri = resultData.data!!
-                        currentEditWindow.saveAs(uri)
-                        supportActionBar!!.title =
-                            currentEditWindow.currentFileProperties.displayName
-                    }
-                }
-                OPEN_REQUEST_CODE -> {
-                    if (resultData != null && resultData.data != null) {
-                        val uri = resultData.data!!
-                        currentEditWindow.openFile(uri)
-                        supportActionBar!!.title =
-                            currentEditWindow.currentFileProperties.displayName
-
-                    }
-                }
-                else -> throw RuntimeException(String.format("onActivityResult" +
-                            "Unexpected request code: 0x%08x", requestCode
-                    )
-                )
-            }
-        }
-    }
 
     private fun changeDisplayTheme(newTheme : String) {
         // if currentName is dark, select dark theme.

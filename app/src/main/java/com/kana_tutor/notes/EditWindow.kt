@@ -16,7 +16,9 @@
 
 package com.kana_tutor.notes
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
@@ -195,7 +197,7 @@ class EditWindow : Fragment() {
                 "Open for read failed:" + e.message + e.stackTrace)
         }
     }
-    fun saveFile() {
+    fun getSaveFile() {
         val currentUri = Uri.parse(currentFileProperties.uri)
         saveToUri(currentUri, R.string.save_file)
     }
@@ -225,16 +227,81 @@ class EditWindow : Fragment() {
             .setView(webview)
             .show()
     }
+    private fun getNewFile() {
+        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
+
+        intent.addCategory(Intent.CATEGORY_OPENABLE)
+        intent.type = "text/plain"
+        intent.putExtra(Intent.EXTRA_TITLE, "")
+
+        startActivityForResult(intent, CREATE_REQUEST_CODE)
+    }
+    private fun getOpenFile() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+        intent.addCategory(Intent.CATEGORY_OPENABLE)
+        intent.type = "text/plain"
+        startActivityForResult(intent, OPEN_REQUEST_CODE)
+    }
+    private fun getSaveFileAs() {
+        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
+        intent.addCategory(Intent.CATEGORY_OPENABLE)
+        intent.type = "text/plain"
+
+        startActivityForResult(intent, SAVE_AS_REQUEST_CODE)
+    }
+
+    public override fun onActivityResult(requestCode: Int, resultCode: Int,
+                                         resultData: Intent?) {
+        super.onActivityResult(requestCode, resultCode, resultData)
+
+        if (resultCode == Activity.RESULT_OK) {
+            when (requestCode) {
+                CREATE_REQUEST_CODE -> {
+                    if (resultData != null && resultData.data != null) {
+                        val uri = resultData.data!!
+                        newFile(uri)
+                        // setActionBarTitle(currentFileProperties.displayName)
+                    }
+                }
+                SAVE_AS_REQUEST_CODE -> {
+                    if (resultData != null && resultData.data != null) {
+                        val uri = resultData.data!!
+                        saveAs(uri)
+                        /*
+                        supportActionBar!!.title =
+                            MainActivity.currentEditWindow.currentFileProperties.displayName
+
+                         */
+                    }
+                }
+                OPEN_REQUEST_CODE -> {
+                    if (resultData != null && resultData.data != null) {
+                        val uri = resultData.data!!
+                        openFile(uri)
+                        /*
+                        supportActionBar!!.title =
+                            MainActivity.currentEditWindow.currentFileProperties.displayName
+
+                         */
+
+                    }
+                }
+                else -> throw RuntimeException(String.format("onActivityResult" +
+                        "Unexpected request code: 0x%08x", requestCode)
+                )
+            }
+        }
+    }
 
     // Menu item selected listener.
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         var rv = true
         Log.d("EditWindow:", "onOptionsItemSelected called")
         when (item.itemId) {
-            R.id.save_file_item -> kToast(context!!, "saveFile()")
-            R.id.save_as_file_item -> kToast(context!!, "saveFileAs()")
-            R.id.open_file_item -> kToast(context!!, "openFile()")
-            R.id.new_file_item -> kToast(context!!, "newFile()")
+            R.id.save_file_item -> getSaveFile()
+            R.id.save_as_file_item -> getSaveFileAs()
+            R.id.open_file_item -> getOpenFile()
+            R.id.new_file_item -> getNewFile()
             R.id.file_properties_item -> displayFileProperties()
             else -> rv = super.onOptionsItemSelected(item)
         }
