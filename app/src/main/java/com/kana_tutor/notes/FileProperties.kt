@@ -37,6 +37,7 @@ class FileProperties {
     var isEmpty = true
     private var documentId = ""
     private var authority = ""
+    private var uriPath = ""
     var fileName = ""
 
     // extension functions.
@@ -58,6 +59,7 @@ class FileProperties {
             isWritable = (getKeyedInt(DocumentsContract.Document.COLUMN_FLAGS) and DocumentsContract.Document.FLAG_SUPPORTS_WRITE) != 0
             documentId = getKeyedString(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
             authority = uri.authority.toString()
+            uriPath = uri.path ?: ""
             isEmpty = false
         }
         c?.close()

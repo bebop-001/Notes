@@ -17,7 +17,6 @@
 package com.kana_tutor.notes
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -28,13 +27,9 @@ import android.view.*
 import android.webkit.WebView
 import androidx.fragment.app.Fragment
 import android.widget.ScrollView
-import android.widget.ShareActionProvider
 import android.widget.TextView
 import androidx.core.content.ContextCompat
-import com.kana_tutor.notes.kanautils.displayBuildInfo
-import com.kana_tutor.notes.kanautils.displayUsage
 import com.kana_tutor.notes.kanautils.kToast
-import kotlinx.android.synthetic.main.edit_window.*
 import java.io.BufferedReader
 import java.io.FileOutputStream
 import java.io.IOException
@@ -43,6 +38,31 @@ import java.io.InputStreamReader
 class EditWindow : Fragment() {
     private var stringUri: String? = null
     var currentFileProperties = FileProperties()
+
+    interface EditWinEventListener {
+        fun titleChanged (title:String)
+    }
+    var titleListener : EditWinEventListener? = null
+    override fun onAttach(activity: Activity) {
+        super.onAttach(activity)
+        try {
+            titleListener = activity as  EditWinEventListener
+        }
+        catch (e:ClassCastException) {
+            throw ClassCastException(activity.toString()
+                    + ": must implement EditWinEventListener")
+        }
+    }
+
+    override fun onDetach() {
+        super.onDetach()
+        titleListener = null
+    }
+    private fun setTitleBar(title : String) {
+        titleListener?.apply {
+            titleChanged(title)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -249,8 +269,7 @@ class EditWindow : Fragment() {
 
         startActivityForResult(intent, SAVE_AS_REQUEST_CODE)
     }
-
-    public override fun onActivityResult(requestCode: Int, resultCode: Int,
+    override fun onActivityResult(requestCode: Int, resultCode: Int,
                                          resultData: Intent?) {
         super.onActivityResult(requestCode, resultCode, resultData)
 
@@ -260,30 +279,21 @@ class EditWindow : Fragment() {
                     if (resultData != null && resultData.data != null) {
                         val uri = resultData.data!!
                         newFile(uri)
-                        // setActionBarTitle(currentFileProperties.displayName)
+                        setTitleBar(currentFileProperties.displayName)
                     }
                 }
                 SAVE_AS_REQUEST_CODE -> {
                     if (resultData != null && resultData.data != null) {
                         val uri = resultData.data!!
                         saveAs(uri)
-                        /*
-                        supportActionBar!!.title =
-                            MainActivity.currentEditWindow.currentFileProperties.displayName
-
-                         */
+                        setTitleBar(currentFileProperties.displayName)
                     }
                 }
                 OPEN_REQUEST_CODE -> {
                     if (resultData != null && resultData.data != null) {
                         val uri = resultData.data!!
                         openFile(uri)
-                        /*
-                        supportActionBar!!.title =
-                            MainActivity.currentEditWindow.currentFileProperties.displayName
-
-                         */
-
+                        setTitleBar(currentFileProperties.displayName)
                     }
                 }
                 else -> throw RuntimeException(String.format("onActivityResult" +
@@ -291,6 +301,10 @@ class EditWindow : Fragment() {
                 )
             }
         }
+    }
+    private fun writeProtectFile() {
+        var fp = currentFileProperties
+        fp.internalWriteProtect = !fp.internalWriteProtect
     }
 
     // Menu item selected listener.
@@ -302,6 +316,7 @@ class EditWindow : Fragment() {
             R.id.save_as_file_item -> getSaveFileAs()
             R.id.open_file_item -> getOpenFile()
             R.id.new_file_item -> getNewFile()
+            R.id.write_protect_file_item -> writeProtectFile()
             R.id.file_properties_item -> displayFileProperties()
             else -> rv = super.onOptionsItemSelected(item)
         }
@@ -331,6 +346,4 @@ class EditWindow : Fragment() {
         Log.d("EditWindow:", "onCreateOptionsMenu called")
         inflater.inflate(R.menu.edit_win_menu, menu)
     }
-
-
 }

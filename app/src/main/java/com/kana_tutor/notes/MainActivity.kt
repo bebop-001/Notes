@@ -43,7 +43,7 @@ const val OPEN_REQUEST_CODE = 41
 const val SAVE_AS_REQUEST_CODE = 42
 
 const val appPrefsFileName = "userPrefs.xml"
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), EditWindow.EditWinEventListener {
 
     companion object {
         var displayTheme = 0 // for light or dark theme.
@@ -90,10 +90,6 @@ class MainActivity : AppCompatActivity() {
         supportActionBar!!.setLogo(R.mipmap.notes_launcher)
         supportActionBar!!.title = ""
     }
-    fun setActionBarTitle(title:String) {
-        supportActionBar!!.title = title
-    }
-
 
     private fun changeDisplayTheme(newTheme : String) {
         // if currentName is dark, select dark theme.
@@ -105,10 +101,6 @@ class MainActivity : AppCompatActivity() {
             .putInt("displayTheme", displayTheme)
             .apply()
         recreate()
-    }
-    private fun writeProtectFile() {
-        var fp = currentEditWindow.currentFileProperties
-        fp.internalWriteProtect = !fp.internalWriteProtect
     }
     // Menu item selected listener.
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -145,6 +137,10 @@ class MainActivity : AppCompatActivity() {
         val inflater = menuInflater
         inflater.inflate(R.menu.main_menu, menu)
         return false
+    }
+
+    override fun titleChanged(title: String) {
+        supportActionBar!!.title = title
     }
 
 }
