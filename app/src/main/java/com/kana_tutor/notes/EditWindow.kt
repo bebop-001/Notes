@@ -22,13 +22,13 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import android.view.*
 import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import android.widget.ScrollView
 import android.widget.ShareActionProvider
 import android.widget.TextView
+import com.kana_tutor.notes.kanautils.displayBuildInfo
+import com.kana_tutor.notes.kanautils.displayUsage
 import com.kana_tutor.notes.kanautils.kToast
 import kotlinx.android.synthetic.main.edit_window.*
 import java.io.BufferedReader
@@ -118,6 +118,8 @@ class EditWindow : Fragment() {
             Log.d("OnFocusChangeListener"
                 , String.format("hasFocus:%s", hasFocus.toString()))
         }
+
+        setHasOptionsMenu(true)
         return view
     }
     private fun saveToUri(uri : Uri, whoResId : Int) {
@@ -210,4 +212,45 @@ class EditWindow : Fragment() {
                 }
             }
     }
+
+    // Menu item selected listener.
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        var rv = true
+        Log.d("EditWindow:", "onOptionsItemSelected called")
+        when (item.itemId) {
+            R.id.save_file_item -> kToast(context!!, "saveFile()")
+            R.id.save_as_file_item -> kToast(context!!, "saveFileAs()")
+            R.id.open_file_item -> kToast(context!!, "openFile()")
+            R.id.new_file_item -> kToast(context!!, "newFile()")
+            R.id.file_properties_item -> kToast(context!!, "displayFileProperties()")
+            else -> rv = super.onOptionsItemSelected(item)
+        }
+        Log.d("EditWindow:", "onOptionsItemSelected done")
+        return rv
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu) {
+        Log.d("EditWindow:", "onPrepareOptionsMenu called")
+        menu.apply {
+            val fp = currentFileProperties
+            fp.apply {
+                val writable = !isEmpty && isWritable && !internalWriteProtect
+                // disable save unless we have a file.
+                findItem(R.id.save_file_item).isEnabled = writable
+                val writeProtectItem = findItem(R.id.write_protect_file_item)!!
+                writeProtectItem.isEnabled = !isEmpty
+                writeProtectItem.title = getString(
+                    if (writable) R.string.is_writable
+                    else R.string.is_read_only
+                )
+            }
+        }
+        Log.d("EditWindow:", "onPrepareOptionsMenu done")
+    }
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        Log.d("EditWindow:", "onCreateOptionsMenu called")
+        inflater.inflate(R.menu.edit_win_menu, menu)
+    }
+
+
 }

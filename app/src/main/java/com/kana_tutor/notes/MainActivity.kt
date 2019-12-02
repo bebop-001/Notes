@@ -150,18 +150,18 @@ class MainActivity : AppCompatActivity() {
 
         currentEditWindow = EditWindow.newInstance("hello world")
 
-        val manager = supportFragmentManager
-        val transaction = manager.beginTransaction()
-        transaction.add(R.id.fragment_placeholder, currentEditWindow)
-        transaction.commit()
-
+        if (savedInstanceState == null) {
+            val manager = supportFragmentManager
+            val transaction = manager.beginTransaction()
+            transaction.add(R.id.fragment_placeholder, currentEditWindow)
+            transaction.commit()
+        }
 
         toolbar.overflowIcon = ContextCompat.getDrawable(
             this, R.drawable.vert_ellipsis_light_img)
         setSupportActionBar(toolbar)
         supportActionBar!!.setLogo(R.mipmap.notes_launcher)
         supportActionBar!!.title = ""
-
     }
     private fun newFile() {
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
@@ -255,52 +255,39 @@ class MainActivity : AppCompatActivity() {
     }
     // Menu item selected listener.
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        var rv = true
+        var rv = super.onOptionsItemSelected(item)
+        Log.d("MainActivity:", "onOptionsItemSelected called")
+
         when (item.itemId) {
-            R.id.save_file_item -> currentEditWindow.saveFile()
-            R.id.save_as_file_item -> saveFileAs()
-            R.id.open_file_item -> openFile()
-            R.id.new_file_item -> newFile()
-            R.id.file_properties_item -> displayFileProperties()
             R.id.build_info_item -> displayBuildInfo(this)
-            R.id.write_protect_file_item -> writeProtectFile()
             R.id.usage_item -> displayUsage(this)
             R.id.select_display_theme -> changeDisplayTheme(item.title.toString())
-            else -> rv = super.onOptionsItemSelected(item)
         }
+        Log.d("MainActivity:", "onOptionsItemSelected done")
         return rv
     }
 
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
-        menu?.apply {
-            val fp = currentEditWindow.currentFileProperties
-            Log.d("menu:pre", String.format("=%s", findItem(R.id.select_display_theme).title))
-            fp.apply {
-                val writable = !isEmpty && isWritable && !internalWriteProtect
-                // disable save unless we have a file.
-                findItem(R.id.save_file_item).isEnabled = writable
-                // findItem(R.id.save_as_file_item).isEnabled = writable
-                findItem(R.id.select_display_theme)
-                    .setTitle(
-                        if (displayTheme == R.string.light_theme)
-                            R.string.dark_theme
-                        else
-                            R.string.light_theme
-                    )
-                val writeProtectItem = findItem(R.id.write_protect_file_item)!!
-                writeProtectItem.isEnabled = !isEmpty
-                writeProtectItem.title = getString(
-                    if (writable) R.string.is_writable
-                    else R.string.is_read_only
-                )
-            }
-        }
-        return super.onPrepareOptionsMenu(menu)
+        Log.d("MainActivity:", "onPrepareOptionsMenu called")
+        super.onPrepareOptionsMenu(menu)
+        menu!!.findItem(R.id.select_display_theme)
+            .setTitle(
+                if (MainActivity.displayTheme == R.string.light_theme)
+                    R.string.dark_theme
+                else
+                    R.string.light_theme
+            )
+        Log.d("MainActivity:", "onPrepareOptionsMenu finished")
+
+        return true
     }
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        Log.d("MainActivity:", "onCreateOptionsMenu called")
+        var rv = super.onCreateOptionsMenu(menu)
+
         val inflater = menuInflater
         inflater.inflate(R.menu.main_menu, menu)
-        return super.onCreateOptionsMenu(menu)
+        return false
     }
 
 }
