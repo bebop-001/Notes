@@ -151,19 +151,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-    private fun displayFileProperties() {
-        val webview = WebView(this)
-        webview.setBackgroundColor(ContextCompat.getColor(this, R.color.file_edit_window_bg))
-        webview.loadData(currentEditWindow
-            .currentFileProperties
-            .formatedProperties(this)
-            , "text/html", "utf-8"
-        )
-        androidx.appcompat.app.AlertDialog.Builder(this)
-            .setView(webview)
-            .show()
-
-    }
 
     private fun changeDisplayTheme(newTheme : String) {
         // if currentName is dark, select dark theme.

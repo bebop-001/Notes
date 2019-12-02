@@ -67,12 +67,12 @@ class FileProperties {
             , displayName, size, isWritable, lastModifiedDate,documentId, uri, fileName
         )
     }
-    fun formatedProperties(activity : Activity) : String {
+    fun formatedProperties(context : Context) : String {
         val writable = !isEmpty && isWritable && !internalWriteProtect
         return String.format(
-            activity.getString(R.string.file_properties_format)
+            context.getString(R.string.file_properties_format)
             , ContextCompat.getColor(
-                activity, R.color.file_edit_window_font_color) and 0x00FFFFFF
+                context, R.color.file_edit_window_font_color) and 0x00FFFFFF
             , displayName, size, lastModifiedDate, writable)
     }
 }

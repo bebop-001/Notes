@@ -23,10 +23,12 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.*
+import android.webkit.WebView
 import androidx.fragment.app.Fragment
 import android.widget.ScrollView
 import android.widget.ShareActionProvider
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import com.kana_tutor.notes.kanautils.displayBuildInfo
 import com.kana_tutor.notes.kanautils.displayUsage
 import com.kana_tutor.notes.kanautils.kToast
@@ -212,6 +214,17 @@ class EditWindow : Fragment() {
                 }
             }
     }
+    private fun displayFileProperties() {
+        val webview = WebView(activity)
+        webview.setBackgroundColor(ContextCompat.getColor(context!!, R.color.file_edit_window_bg))
+        webview.loadData(
+                currentFileProperties.formatedProperties(context!!)
+            , "text/html", "utf-8"
+        )
+        androidx.appcompat.app.AlertDialog.Builder(context!!)
+            .setView(webview)
+            .show()
+    }
 
     // Menu item selected listener.
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -222,7 +235,7 @@ class EditWindow : Fragment() {
             R.id.save_as_file_item -> kToast(context!!, "saveFileAs()")
             R.id.open_file_item -> kToast(context!!, "openFile()")
             R.id.new_file_item -> kToast(context!!, "newFile()")
-            R.id.file_properties_item -> kToast(context!!, "displayFileProperties()")
+            R.id.file_properties_item -> displayFileProperties()
             else -> rv = super.onOptionsItemSelected(item)
         }
         Log.d("EditWindow:", "onOptionsItemSelected done")
