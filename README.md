@@ -17,6 +17,17 @@ through whatever is current (API-29 right now)
 I can't see how to make this work under Windows so it
 currently builds only under Linux.
 
+Mon Dec  2 11:34:57 PST 2019
+moved file open/save stuff from main activity to editWindow 
+fragment and split menu items so MainActivity takes care
+of non-edit stuff (theme, build info, etc) and editWindow
+frag takes care of file related stuff.
+
+I want to be able to have private files and be able to really
+write protect.  To do that it looks like I need to do a file
+picker that works off of getFilesDir path -- which is accessed
+using the File class.
+
 Sun Dec  1 13:09:45 PST 2019
 Added some debug to the edit text window so I could see what the textwatcher
 is doing.  Added a "WriteProtect" item.  It doesn't actually write protect
