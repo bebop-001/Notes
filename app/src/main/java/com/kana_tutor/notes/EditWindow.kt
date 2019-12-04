@@ -35,9 +35,29 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStreamReader
 
+private const val CREATE_REQUEST_CODE = 40
+private const val OPEN_REQUEST_CODE = 41
+private const val SAVE_AS_REQUEST_CODE = 42
+
 class EditWindow : Fragment() {
     private var stringUri: String? = null
-    var currentFileProperties = FileProperties()
+    companion object {
+        /*
+         * Use this factory method to create a new instance of
+         * this fragment.
+         * TODO: can't have static and multip;e instances of object!
+         */
+        @JvmStatic
+        fun newInstance(stringUri: String) =
+            EditWindow().apply {
+                arguments = Bundle().apply {
+                    putString("stringUri", stringUri)
+                }
+            }
+        var currentFileProperties = FileProperties()
+    }
+    fun getCurrentDisplayName() = currentFileProperties.displayName
+
 
     interface EditWinEventListener {
         fun titleChanged (title:String)
@@ -47,6 +67,8 @@ class EditWindow : Fragment() {
         super.onAttach(activity)
         try {
             titleListener = activity as  EditWinEventListener
+            if (currentFileProperties != null)
+                titleListener!!.titleChanged(currentFileProperties.displayName)
         }
         catch (e:ClassCastException) {
             throw ClassCastException(activity.toString()
@@ -70,6 +92,7 @@ class EditWindow : Fragment() {
             stringUri = it.getString("stringUri")
         }
     }
+
 
     private lateinit var editWindowTV: TextView
     private lateinit var scrollView: ScrollView
@@ -223,19 +246,6 @@ class EditWindow : Fragment() {
     }
     fun saveAs(uri : Uri) = saveToUri(uri, R.string.save_as_file)
 
-    companion object {
-        /*
-         * Use this factory method to create a new instance of
-         * this fragment.
-         */
-        @JvmStatic
-        fun newInstance(stringUri: String) =
-            EditWindow().apply {
-                arguments = Bundle().apply {
-                    putString("stringUri", stringUri)
-                }
-            }
-    }
     private fun displayFileProperties() {
         val webview = WebView(activity)
         webview.setBackgroundColor(ContextCompat.getColor(context!!, R.color.file_edit_window_bg))

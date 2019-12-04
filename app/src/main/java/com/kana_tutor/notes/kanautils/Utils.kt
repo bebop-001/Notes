@@ -132,7 +132,7 @@ fun kToast(context : Context, message: String) {
         .show()
 }
 // Display info about the build using an AlertDialog.
-fun displayBuildInfo(activity : Activity) {
+fun displayBuildInfo(activity : Activity) : Boolean {
     val appInfo = activity.packageManager
         .getApplicationInfo(BuildConfig.APPLICATION_ID, 0)
     val installTimestamp = File(appInfo.sourceDir).lastModified()
@@ -155,8 +155,9 @@ fun displayBuildInfo(activity : Activity) {
     androidx.appcompat.app.AlertDialog.Builder(activity)
         .setView(webview)
         .show()
+    return true
 }
-fun displayUsage (activity : Activity) {
+fun displayUsage (activity : Activity) : Boolean {
     val webview = WebView(activity)
     webview.setBackgroundColor(ContextCompat.getColor(activity, R.color.file_edit_window_bg))
     webview.loadData(
@@ -168,6 +169,6 @@ ContextCompat.getColor(activity, R.color.file_edit_window_font_color) and 0x00FF
     androidx.appcompat.app.AlertDialog.Builder(activity)
         .setView(webview)
         .show()
-
+    return true
 }
 

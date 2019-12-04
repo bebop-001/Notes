@@ -33,14 +33,10 @@ import com.kana_tutor.notes.kanautils.displayBuildInfo
 import com.kana_tutor.notes.kanautils.promptForShortcut
 
 import kotlinx.android.synthetic.main.activity_main.*
-import android.webkit.WebView
 import androidx.appcompat.app.AppCompatDelegate
 import com.kana_tutor.notes.kanautils.displayUsage
 
 
-const val CREATE_REQUEST_CODE = 40
-const val OPEN_REQUEST_CODE = 41
-const val SAVE_AS_REQUEST_CODE = 42
 
 const val appPrefsFileName = "userPrefs.xml"
 class MainActivity : AppCompatActivity(), EditWindow.EditWinEventListener {
@@ -91,7 +87,12 @@ class MainActivity : AppCompatActivity(), EditWindow.EditWinEventListener {
         supportActionBar!!.title = ""
     }
 
-    private fun changeDisplayTheme(newTheme : String) {
+    override fun onResume() {
+        super.onResume()
+        supportActionBar!!.title = currentEditWindow.getCurrentDisplayName()
+    }
+
+    private fun changeDisplayTheme(newTheme : String) : Boolean {
         // if currentName is dark, select dark theme.
         displayTheme = R.string.dark_theme
         if (newTheme == resources.getString(R.string.light_theme))
@@ -101,19 +102,18 @@ class MainActivity : AppCompatActivity(), EditWindow.EditWinEventListener {
             .putInt("displayTheme", displayTheme)
             .apply()
         recreate()
+        return true
     }
     // Menu item selected listener.
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        var rv = super.onOptionsItemSelected(item)
         Log.d("MainActivity:", "onOptionsItemSelected called")
 
         when (item.itemId) {
-            R.id.build_info_item -> displayBuildInfo(this)
-            R.id.usage_item -> displayUsage(this)
-            R.id.select_display_theme -> changeDisplayTheme(item.title.toString())
+            R.id.build_info_item        -> return displayBuildInfo(this)
+            R.id.usage_item             -> return displayUsage(this)
+            R.id.select_display_theme   -> return changeDisplayTheme(item.title.toString())
+            else                        -> return super.onOptionsItemSelected(item)
         }
-        Log.d("MainActivity:", "onOptionsItemSelected done")
-        return rv
     }
 
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
@@ -140,7 +140,9 @@ class MainActivity : AppCompatActivity(), EditWindow.EditWinEventListener {
     }
 
     override fun titleChanged(title: String) {
-        supportActionBar!!.title = title
+        if (supportActionBar != null) {
+            supportActionBar!!.title = title
+        }
     }
 
 }
