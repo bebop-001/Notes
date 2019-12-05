@@ -19,7 +19,6 @@
 
 package com.kana_tutor.notes
 
-import android.app.Activity
 import android.content.*
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -89,7 +88,7 @@ class MainActivity : AppCompatActivity(), EditWindow.EditWinEventListener {
 
     override fun onResume() {
         super.onResume()
-        supportActionBar!!.title = currentEditWindow.getCurrentDisplayName()
+        supportActionBar!!.title = currentEditWindow.currentFileTitle
     }
 
     private fun changeDisplayTheme(newTheme : String) : Boolean {
@@ -139,8 +138,10 @@ class MainActivity : AppCompatActivity(), EditWindow.EditWinEventListener {
         return false
     }
 
+    var currentTitle = ""
     override fun titleChanged(title: String) {
-        if (supportActionBar != null) {
+        if (supportActionBar != null && currentTitle != title) {
+            currentTitle = title
             supportActionBar!!.title = title
         }
     }

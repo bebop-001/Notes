@@ -17,6 +17,12 @@ through whatever is current (API-29 right now)
 I can't see how to make this work under Windows so it
 currently builds only under Linux.
 
+Wed Dec  4 13:21:49 PST 2019
+Added an internal file to keep trak of write-protected.  Not
+real file-system write protect but better than nothing.
+
+Modified title in action bar to show file is modified and readonly/read-write.
+
 Mon Dec  2 11:34:57 PST 2019
 moved file open/save stuff from main activity to editWindow 
 fragment and split menu items so MainActivity takes care

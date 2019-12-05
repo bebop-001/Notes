@@ -17,7 +17,9 @@
 package com.kana_tutor.notes
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences.Editor
 import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
@@ -25,15 +27,16 @@ import android.text.TextWatcher
 import android.util.Log
 import android.view.*
 import android.webkit.WebView
-import androidx.fragment.app.Fragment
 import android.widget.ScrollView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
 import com.kana_tutor.notes.kanautils.kToast
 import java.io.BufferedReader
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStreamReader
+
 
 private const val CREATE_REQUEST_CODE = 40
 private const val OPEN_REQUEST_CODE = 41
@@ -56,7 +59,19 @@ class EditWindow : Fragment() {
             }
         var currentFileProperties = FileProperties()
     }
-    fun getCurrentDisplayName() = currentFileProperties.displayName
+    private var _currentFileTitle = ""
+    val currentFileTitle : String
+        get() {
+            if (currentFileProperties.displayName == "")
+                _currentFileTitle =  ""
+            else {
+                val changed = if (editWindowTextChanges > 0) "✔️" else " "
+                val writeProtected =
+                    if (currentFileProperties.internalWriteProtect) "🔒" else "\uD83D\uDD13"
+                _currentFileTitle = changed + writeProtected + currentFileProperties.displayName
+            }
+            return _currentFileTitle
+        }
 
 
     interface EditWinEventListener {
@@ -68,7 +83,7 @@ class EditWindow : Fragment() {
         try {
             titleListener = activity as  EditWinEventListener
             if (currentFileProperties != null)
-                titleListener!!.titleChanged(currentFileProperties.displayName)
+                titleListener!!.titleChanged(currentFileTitle)
         }
         catch (e:ClassCastException) {
             throw ClassCastException(activity.toString()
@@ -91,11 +106,16 @@ class EditWindow : Fragment() {
         arguments?.let {
             stringUri = it.getString("stringUri")
         }
+        val prefs = context!!.
+            getSharedPreferences(editWinPrefsName, Context.MODE_PRIVATE)
+        writeProtectedFiles  =
+            prefs.getStringSet("writeProtected", HashSet<String>())
     }
 
 
     private lateinit var editWindowTV: TextView
     private lateinit var scrollView: ScrollView
+    private var editWindowTextChanges = 0
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -130,23 +150,26 @@ class EditWindow : Fragment() {
             }
             override fun beforeTextChanged(
                 s: CharSequence, start: Int, count: Int, after: Int) {
-                if (count != s.length) {
-                    Log.d(
-                        "TextListener", String.format(
-                            "before: start %d, count %d, after %d: \"%s\""
-                            ,
-                            start, count, after, s.shortChangeMess(start, count)
-                        )
+                Log.d(
+                    "TextListener", String.format(
+                        "before: start %d, count %d, after %d: \"%s\":len %d"
+                        ,
+                        start, count, after, s.shortChangeMess(start, count), s.length
                     )
+                )
+                if (count != s.length) {
                 }
             }
             override fun onTextChanged(
                 s: CharSequence, start: Int, before: Int, count: Int) {
-                if (count != s.length) {
-                    Log.d("TextListener", String.format(
-                        "onChange: start %d, count %d, before %d : \"%s\""
-                        , start, count, before, s.shortChangeMess(start, count))
-                    )
+                Log.d("TextListener", String.format(
+                    "onChange: start %d, count %d, before %d : \"%s\":len %d"
+                    , start, count, before, s.shortChangeMess(start, count), s.length)
+                )
+                if (count > 0) {
+                    editWindowTextChanges++
+                    titleListener?.titleChanged(currentFileTitle)
+
                 }
             }
             override fun afterTextChanged(s: Editable) {
@@ -170,42 +193,56 @@ class EditWindow : Fragment() {
         return view
     }
     private fun saveToUri(uri : Uri, whoResId : Int) {
-        val pfd = context!!
-            .contentResolver
-            .openFileDescriptor(uri, "w")
-        if (pfd != null) {
-            try {
-                val fileOutputStream = FileOutputStream(
-                    pfd.fileDescriptor
-                )
-                val textContent = editWindowTV.text.toString()
-                fileOutputStream.write(textContent.toByteArray())
-                fileOutputStream.close()
-                currentFileProperties = FileProperties(context!!, uri)
-                Log.d("saveToUri:", currentFileProperties.toString())
-                kToast(
-                    this.context!!, getString(
-                        R.string.read_write_toast_fmt, getString(whoResId)
-                        , getString(R.string.wrote), currentFileProperties.displayName
-                        , currentFileProperties.size
-                    )
-                )
-            } catch (e: IOException) {
-                throw RuntimeException(
-                    "Open for write failed:" + e.message + e.stackTrace
-                )
-            }
+        if (writeProtectedFiles!!.contains(uri.path)) {
+            val p = FileProperties(context!!, uri)
+            kToast(context!!, getString(R.string.is_write_protected, p.displayName))
         }
-        else
-            throw RuntimeException(
-                this.context!!.getString(R.string.save_uri_failed, uri.toString())
-            )
+        else {
+            val pfd = context!!
+                .contentResolver
+                .openFileDescriptor(uri, "w")
+            if (pfd != null) {
+                try {
+                    val fileOutputStream = FileOutputStream(
+                        pfd.fileDescriptor
+                    )
+                    val textContent = editWindowTV.text.toString()
+                    fileOutputStream.write(textContent.toByteArray())
+                    fileOutputStream.close()
+                    editWindowTextChanges = 0
+                    currentFileProperties = FileProperties(context!!, uri)
+                    titleListener?.titleChanged(currentFileTitle)
+                    Log.d("saveToUri:", currentFileProperties.toString())
+                    kToast(
+                        this.context!!, getString(
+                            R.string.read_write_toast_fmt, getString(whoResId)
+                            , getString(R.string.wrote), currentFileTitle
+                            , currentFileProperties.size
+                        )
+                    )
+                } catch (e: IOException) {
+                    throw RuntimeException(
+                        "Open for write failed:" + e.message + e.stackTrace
+                    )
+                }
+            }
+            else
+                throw RuntimeException(
+                    this.context!!.getString(R.string.save_uri_failed, uri.toString())
+                )
+        }
     }
     fun newFile(uri: Uri) {
         // unless there is a file open, clear the edit text view.
         if (! currentFileProperties.isEmpty) editWindowTV.text = ""
-        saveToUri(uri, R.string.new_file)
-        currentFileProperties = FileProperties(context!!, uri)
+        if (writeProtectedFiles!!.contains(uri.path)) {
+            val p = FileProperties(context!!, uri)
+            kToast(context!!, getString(R.string.is_write_protected, p.displayName))
+        }
+        else {
+            saveToUri(uri, R.string.new_file)
+            currentFileProperties = FileProperties(context!!, uri)
+        }
 
         Log.d("newFileContents:", currentFileProperties.toString())
     }
@@ -226,11 +263,14 @@ class EditWindow : Fragment() {
             editWindowTV.text = stringBuilder.toString()
 
             currentFileProperties = FileProperties(context!!, uri)
+            editWindowTextChanges = 0
+            currentFileProperties.internalWriteProtect =
+                writeProtectedFiles!!.contains(currentFileProperties.uriPath)
             kToast(
                 this.context!!, getString(
                     R.string.read_write_toast_fmt, getString(R.string.open_file)
                     , getString(R.string.read)
-                    , currentFileProperties.displayName, currentFileProperties.size
+                    , currentFileTitle, currentFileProperties.size
                 )
             )
 
@@ -279,6 +319,10 @@ class EditWindow : Fragment() {
 
         startActivityForResult(intent, SAVE_AS_REQUEST_CODE)
     }
+    // name of shared prefs file for this fragment
+    val editWinPrefsName = "EditWindowPrefs"
+    var writeProtectedFiles : MutableSet<String> ? = null
+
     override fun onActivityResult(requestCode: Int, resultCode: Int,
                                          resultData: Intent?) {
         super.onActivityResult(requestCode, resultCode, resultData)
@@ -313,8 +357,19 @@ class EditWindow : Fragment() {
         }
     }
     private fun writeProtectFile() {
+        val prefs = context!!.
+            getSharedPreferences(editWinPrefsName, Context.MODE_PRIVATE)
+        writeProtectedFiles  =
+            prefs.getStringSet("writeProtected", HashSet<String>())
         var fp = currentFileProperties
+        writeProtectedFiles!!.add(currentFileProperties.uriPath)
         fp.internalWriteProtect = !fp.internalWriteProtect
+        if (! fp.internalWriteProtect)
+            writeProtectedFiles!!.remove(currentFileProperties.uriPath)
+        titleListener?.titleChanged(currentFileTitle)
+        prefs.edit()
+            .putStringSet("writeProtected", writeProtectedFiles)
+            .apply()
     }
 
     // Menu item selected listener.
@@ -339,14 +394,16 @@ class EditWindow : Fragment() {
         menu.apply {
             val fp = currentFileProperties
             fp.apply {
-                val writable = !isEmpty && isWritable && !internalWriteProtect
+                val readOnly =
+                    writeProtectedFiles!!.contains(currentFileProperties.uriPath)
+                    || currentFileProperties.displayName == ""
                 // disable save unless we have a file.
-                findItem(R.id.save_file_item).isEnabled = writable
+                findItem(R.id.save_file_item).isEnabled = !readOnly
                 val writeProtectItem = findItem(R.id.write_protect_file_item)!!
                 writeProtectItem.isEnabled = !isEmpty
                 writeProtectItem.title = getString(
-                    if (writable) R.string.is_writable
-                    else R.string.is_read_only
+                    if (readOnly) R.string.is_read_only
+                    else R.string.is_writable
                 )
             }
         }

@@ -30,14 +30,14 @@ class FileProperties {
     var displayName = ""
     var uri :String = ""
     var size = -1
-    var isWritable = false
+    // var isWritable = true // this is set in the open to either true or false.
     var internalWriteProtect = false
     private var lastModified = 0L
     private var lastModifiedDate = Date(0).toString()
     var isEmpty = true
     private var documentId = ""
     private var authority = ""
-    private var uriPath = ""
+    var uriPath = ""
     var fileName = ""
 
     // extension functions.
@@ -56,7 +56,8 @@ class FileProperties {
             displayName = getKeyedString(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
             lastModified = getKeyedLong(DocumentsContract.Document.COLUMN_LAST_MODIFIED)
             lastModifiedDate = Date(lastModified).toString()
-            isWritable = (getKeyedInt(DocumentsContract.Document.COLUMN_FLAGS) and DocumentsContract.Document.FLAG_SUPPORTS_WRITE) != 0
+            // we're ignoring this property for Storage Access Framework.  You can't alter it.
+            // isWritable = (getKeyedInt(DocumentsContract.Document.COLUMN_FLAGS) and DocumentsContract.Document.FLAG_SUPPORTS_WRITE) != 0
             documentId = getKeyedString(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
             authority = uri.authority.toString()
             uriPath = uri.path ?: ""
@@ -80,11 +81,11 @@ class FileProperties {
     override fun toString(): String {
         return String.format(
             "%s:size=%d,isWritable:%b,lastModifiedDate:%s,id=\"%s\"uri=\"%s\", fileName=\"%s\""
-            , displayName, size, isWritable, lastModifiedDate,documentId, uri, fileName
+            , displayName, size, ! internalWriteProtect, lastModifiedDate,documentId, uri, fileName
         )
     }
     fun formatedProperties(context : Context) : String {
-        val writable = !isEmpty && isWritable && !internalWriteProtect
+        val writable = !isEmpty && !internalWriteProtect
         return String.format(
             context.getString(R.string.file_properties_format)
             , ContextCompat.getColor(
