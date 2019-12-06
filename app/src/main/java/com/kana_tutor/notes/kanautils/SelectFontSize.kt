@@ -33,7 +33,7 @@ interface FontSizeChangedListener {
 @SuppressLint("InflateParams")
 fun selectFontSize(activity : Activity, listener : FontSizeChangedListener) {
     val selectView = activity.layoutInflater.inflate(R.layout.font_size_select, null)
-    
+
     val sampleView = selectView.findViewById<TextView>(R.id.size_sample_view)
     sampleView.setBackgroundColor(ContextCompat.getColor(activity, R.color.file_edit_window_bg))
     sampleView.setTextColor(ContextCompat.getColor(activity, R.color.file_edit_window_font_color))

@@ -152,6 +152,7 @@ class EditWindow : Fragment(), FontSizeChangedListener {
             }
             override fun beforeTextChanged(
                 s: CharSequence, start: Int, count: Int, after: Int) {
+                /*
                 Log.d(
                     "TextListener", String.format(
                         "before: start %d, count %d, after %d: \"%s\":len %d"
@@ -159,23 +160,25 @@ class EditWindow : Fragment(), FontSizeChangedListener {
                         start, count, after, s.shortChangeMess(start, count), s.length
                     )
                 )
-                if (count != s.length) {
-                }
+                 */
             }
             override fun onTextChanged(
                 s: CharSequence, start: Int, before: Int, count: Int) {
+                /*
                 Log.d("TextListener", String.format(
                     "onChange: start %d, count %d, before %d : \"%s\":len %d"
                     , start, count, before, s.shortChangeMess(start, count), s.length)
                 )
-                if (count > 0) {
+                 */
+                // count > 0, chars added.  before > 0 chars removed.
+                if (count > 0 || before > 0) {
                     editWindowTextChanges++
                     titleListener?.titleChanged(currentFileTitle)
 
                 }
             }
             override fun afterTextChanged(s: Editable) {
-                Log.d("TextListener", "afterTextChanged")
+                // Log.d("TextListener", "afterTextChanged")
             }
         })
         // Things work ok with listener commented out.  for demo only.
