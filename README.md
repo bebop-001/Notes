@@ -17,6 +17,11 @@ through whatever is current (API-29 right now)
 I can't see how to make this work under Windows so it
 currently builds only under Linux.
 
+
+Fri Dec  6 11:35:15 PST 2019
+added code to allow edit font size changes.  Not persistent yet but
+works.
+
 Wed Dec  4 13:21:49 PST 2019
 Added an internal file to keep trak of write-protected.  Not
 real file-system write protect but better than nothing.
