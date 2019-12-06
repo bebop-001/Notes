@@ -26,6 +26,8 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 
 import com.kana_tutor.notes.kanautils.displayBuildInfo
@@ -34,7 +36,7 @@ import com.kana_tutor.notes.kanautils.promptForShortcut
 import kotlinx.android.synthetic.main.activity_main.*
 import androidx.appcompat.app.AppCompatDelegate
 import com.kana_tutor.notes.kanautils.displayUsage
-
+import com.kana_tutor.notes.kanautils.selectFontSize
 
 
 const val appPrefsFileName = "userPrefs.xml"
@@ -49,9 +51,12 @@ class MainActivity : AppCompatActivity(), EditWindow.EditWinEventListener {
     private val userPreferences : SharedPreferences
     get() = _userPreferences
 
+    var rootView : View? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        rootView = findViewById(R.id.root_view)
         _userPreferences = getSharedPreferences(
             appPrefsFileName,
             Context.MODE_PRIVATE

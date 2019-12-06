@@ -19,19 +19,21 @@ package com.kana_tutor.notes
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences.Editor
 import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import android.util.TypedValue
 import android.view.*
 import android.webkit.WebView
 import android.widget.ScrollView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.kana_tutor.notes.kanautils.FontSizeChangedListener
 import com.kana_tutor.notes.kanautils.kToast
+import com.kana_tutor.notes.kanautils.selectFontSize
 import java.io.BufferedReader
 import java.io.FileOutputStream
 import java.io.IOException
@@ -42,7 +44,7 @@ private const val CREATE_REQUEST_CODE = 40
 private const val OPEN_REQUEST_CODE = 41
 private const val SAVE_AS_REQUEST_CODE = 42
 
-class EditWindow : Fragment() {
+class EditWindow : Fragment(), FontSizeChangedListener {
     private var stringUri: String? = null
     companion object {
         /*
@@ -57,7 +59,8 @@ class EditWindow : Fragment() {
                     putString("stringUri", stringUri)
                 }
             }
-        var currentFileProperties = FileProperties()
+        private var currentFileProperties = FileProperties()
+        private var editWindowTextChanges = 0
     }
     private var _currentFileTitle = ""
     val currentFileTitle : String
@@ -115,7 +118,6 @@ class EditWindow : Fragment() {
 
     private lateinit var editWindowTV: TextView
     private lateinit var scrollView: ScrollView
-    private var editWindowTextChanges = 0
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -371,6 +373,11 @@ class EditWindow : Fragment() {
             .putStringSet("writeProtected", writeProtectedFiles)
             .apply()
     }
+    override fun fontSizeChanged(newSize: Float) {
+        editWindowTV.setTextSize(TypedValue.COMPLEX_UNIT_PX, newSize)
+        editWindowTV.invalidate()
+        Log.d("fontSizeChanged", newSize.toString())
+    }
 
     // Menu item selected listener.
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -383,6 +390,7 @@ class EditWindow : Fragment() {
             R.id.new_file_item -> getNewFile()
             R.id.write_protect_file_item -> writeProtectFile()
             R.id.file_properties_item -> displayFileProperties()
+            R.id.select_font_size       -> selectFontSize(this.activity as Activity, this)
             else -> rv = super.onOptionsItemSelected(item)
         }
         Log.d("EditWindow:", "onOptionsItemSelected done")

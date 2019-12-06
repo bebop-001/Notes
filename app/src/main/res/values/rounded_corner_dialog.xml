@@ -20,7 +20,7 @@
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
     <style name="rounded_corner_dialog" parent="android:Theme.Dialog">
     	<item name="android:windowBackground">
-    		@drawable/curved_shape
+    		@drawable/rounded_border
     	</item>
     </style>
 </resources>
