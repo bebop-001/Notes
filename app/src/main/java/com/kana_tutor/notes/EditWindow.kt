@@ -86,8 +86,7 @@ class EditWindow : Fragment(), FontSizeChangedListener {
         super.onAttach(activity)
         try {
             titleListener = activity as  EditWinEventListener
-            if (currentFileProperties != null)
-                titleListener!!.titleChanged(currentFileTitle)
+            titleListener!!.titleChanged(currentFileTitle)
         }
         catch (e:ClassCastException) {
             throw ClassCastException(activity.toString()
