@@ -17,6 +17,8 @@ through whatever is current (API-29 right now)
 I can't see how to make this work under Windows so it
 currently builds only under Linux.
 
+Fri Dec  6 17:47:53 PST 2019
+User-selected font size tracks with file.
 
 Fri Dec  6 11:35:15 PST 2019
 added code to allow edit font size changes.  Not persistent yet but
