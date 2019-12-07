@@ -403,6 +403,7 @@ class EditWindow : Fragment(), FontSizeChangedListener {
             .edit()
             .putFloat(currentFileProperties.uriPath + ".fontSize", newSize)
             .apply()
+        editWindowTV.setTextSize(TypedValue.COMPLEX_UNIT_PX, newSize)
     }
 
     // Menu item selected listener.
@@ -439,6 +440,8 @@ class EditWindow : Fragment(), FontSizeChangedListener {
                     if (readOnly) R.string.is_read_only
                     else R.string.is_writable
                 )
+                findItem(R.id.select_font_size).isEnabled =
+                    ! currentFileProperties.isEmpty
             }
         }
         Log.d("EditWindow:", "onPrepareOptionsMenu done")
