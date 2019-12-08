@@ -18,6 +18,7 @@ package com.kana_tutor.notes
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -32,6 +33,7 @@ import android.webkit.WebView
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.app.ShareCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.kana_tutor.notes.kanautils.*
@@ -415,6 +417,22 @@ class EditWindow : Fragment(), FontSizeChangedListener {
             .putStringSet("writeProtected", writeProtectedFiles)
             .apply()
     }
+    // Share the current file.
+    private fun shareFile() {
+        val shareIntent = ShareCompat.IntentBuilder.from(activity)
+            .setType(Intent.ACTION_SEND)
+            .setSubject(getString(R.string.sharing_file_named, currentFileProperties.displayName))
+            .setText(getString(R.string.sharing_file_named, currentFileProperties.displayName))
+            .setType("text/plain")
+            .addStream(Uri.parse(currentFileProperties.uri))
+            .intent
+        try {
+            startActivity(shareIntent)
+        } catch (ex: ActivityNotFoundException) {
+            Toast.makeText(context, getString(R.string.sharing_not_available, ex.message),
+                Toast.LENGTH_LONG).show()
+        }
+    }
 
     // callback for FontSizeChangedListener.  If user selected a fontSize
     // for the current file save it to user preferences using the
@@ -434,6 +452,7 @@ class EditWindow : Fragment(), FontSizeChangedListener {
         var rv = true
         Log.d("EditWindow:", "onOptionsItemSelected called")
         when (item.itemId) {
+            R.id.share_menu_item -> shareFile()
             R.id.save_file_item -> getSaveFile()
             R.id.save_as_file_item -> getSaveFileAs()
             R.id.open_file_item -> getOpenFile()
@@ -464,6 +483,8 @@ class EditWindow : Fragment(), FontSizeChangedListener {
                     else R.string.is_writable
                 )
                 findItem(R.id.select_font_size).isEnabled =
+                    ! currentFileProperties.isEmpty
+                findItem(R.id.share_menu_item).isEnabled =
                     ! currentFileProperties.isEmpty
             }
         }

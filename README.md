@@ -17,6 +17,9 @@ through whatever is current (API-29 right now)
 I can't see how to make this work under Windows so it
 currently builds only under Linux.
 
+Sun Dec  8 15:00:36 PST 2019
+Added a menu item to allow sharing the current file.
+
 Sat Dec  7 18:17:34 PST 2019
 Added a dialog to allow user to abort overwrite of changes.
 
