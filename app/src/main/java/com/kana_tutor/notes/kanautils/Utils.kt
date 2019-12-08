@@ -75,7 +75,7 @@ fun htmlString(htmlString:String) : Spanned {
  * @param onClick               array of button onclick listeners for dialog
  */
 fun yesNoDialog(
-    a: Activity,
+    context: Context,
     isHtmlQuery: Boolean,
     queryString: String,
     buttonStringResId: IntArray,
@@ -92,7 +92,7 @@ fun yesNoDialog(
         )
     Log.d("promptForShortcut", "Start")
     Log.d("promptForShortcut", "entered")
-    val query = TextView(a)
+    val query = TextView(context)
     if (isHtmlQuery) {
         val html = htmlString(queryString)
         query.text = html
@@ -103,7 +103,7 @@ fun yesNoDialog(
     query.setTextColor(Color.WHITE)
     query.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20.toFloat())
     val b = AlertDialog.Builder(
-        a,
+        context,
         R.style.rounded_corner_dialog
     )
         .setIcon(R.mipmap.notes_launcher)

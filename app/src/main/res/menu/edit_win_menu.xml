@@ -27,7 +27,7 @@
         android:id="@+id/write_protect_file_item"
         android:title="@string/is_writable"
         app:showAsAction="never"
-    />
+        />
     <item
         android:id="@+id/file_properties_item"
         android:title="@string/file_properties"

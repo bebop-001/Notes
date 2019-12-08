@@ -21,6 +21,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -30,20 +31,19 @@ import android.view.*
 import android.webkit.WebView
 import android.widget.ScrollView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import com.kana_tutor.notes.kanautils.FontSizeChangedListener
-import com.kana_tutor.notes.kanautils.kToast
-import com.kana_tutor.notes.kanautils.selectFontSize
+import com.kana_tutor.notes.kanautils.*
 import java.io.BufferedReader
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStreamReader
 
 
-private const val CREATE_REQUEST_CODE = 40
-private const val OPEN_REQUEST_CODE = 41
-private const val SAVE_AS_REQUEST_CODE = 42
+private const val CREATE_REQUEST_CODE   = 40
+private const val OPEN_REQUEST_CODE = CREATE_REQUEST_CODE  + 1
+private const val SAVE_AS_REQUEST_CODE = OPEN_REQUEST_CODE + 1
 
 class EditWindow : Fragment(), FontSizeChangedListener {
     private var stringUri: String? = null
@@ -317,6 +317,30 @@ class EditWindow : Fragment(), FontSizeChangedListener {
             .setView(webView)
             .show()
     }
+    // If contents of edit window have been altered and user is about to overwrite,
+    // give them an opportunity to abort the open/new file.
+    private fun overwriteFileChanges(intent:Intent, requestCode:Int) {
+        if (editWindowTextChanges > 0) {
+            val buttonIds = intArrayOf(R.string.NO, R.string.YES)
+            val buttonCallbacks: Array<() -> Unit> =
+                arrayOf(
+                    { Toast.makeText(
+                        context!!, getString(R.string.overwrite_aborted), Toast.LENGTH_SHORT)
+                        .show()
+                    },
+                    { startActivityForResult(intent, requestCode) }
+                )
+            val promptMess = context!!.getString(
+                R.string.discard_file_changes, currentFileProperties.displayName
+            )
+            yesNoDialog(
+                context!! ,false, promptMess,
+                buttonIds, buttonCallbacks
+            )
+        }
+        else
+            startActivityForResult(intent, requestCode)
+    }
     private fun getNewFile() {
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
 
@@ -324,13 +348,13 @@ class EditWindow : Fragment(), FontSizeChangedListener {
         intent.type = "text/plain"
         intent.putExtra(Intent.EXTRA_TITLE, "")
 
-        startActivityForResult(intent, CREATE_REQUEST_CODE)
+        overwriteFileChanges(intent, CREATE_REQUEST_CODE)
     }
     private fun getOpenFile() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
         intent.addCategory(Intent.CATEGORY_OPENABLE)
         intent.type = "text/plain"
-        startActivityForResult(intent, OPEN_REQUEST_CODE)
+        overwriteFileChanges(intent, OPEN_REQUEST_CODE)
     }
     private fun getSaveFileAs() {
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
