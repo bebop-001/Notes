@@ -22,7 +22,6 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -100,7 +99,14 @@ class EditWindow : Fragment(), FontSizeChangedListener {
         super.onDetach()
         titleListener = null
     }
+    private var mainMenu : Menu? = null
     private fun setTitleBar(title : String) {
+        // Item must be enabled here because the icon is outside
+        // of the menu pulldown and the pulldown activation is
+        // what enables/disables the other menu items.
+        if (mainMenu != null)
+            mainMenu!!.findItem(R.id.share_menu_item).isEnabled =
+                ! currentFileProperties.isEmpty
         titleListener?.apply {
             titleChanged(title)
         }
@@ -467,7 +473,7 @@ class EditWindow : Fragment(), FontSizeChangedListener {
     }
 
     override fun onPrepareOptionsMenu(menu: Menu) {
-        Log.d("EditWindow:", "onPrepareOptionsMenu called")
+        mainMenu = menu
         menu.apply {
             val fp = currentFileProperties
             fp.apply {
