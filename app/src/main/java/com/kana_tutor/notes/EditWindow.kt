@@ -425,15 +425,14 @@ class EditWindow : Fragment(), FontSizeChangedListener {
     }
     // Share the current file.
     private fun shareFile() {
-        val shareIntent = ShareCompat.IntentBuilder.from(activity)
+        try {
+            ShareCompat.IntentBuilder.from(activity)
             .setType(Intent.ACTION_SEND)
             .setSubject(getString(R.string.sharing_file_named, currentFileProperties.displayName))
             .setText(getString(R.string.sharing_file_named, currentFileProperties.displayName))
             .setType("text/plain")
             .addStream(Uri.parse(currentFileProperties.uri))
-            .intent
-        try {
-            startActivity(shareIntent)
+            .startChooser()
         } catch (ex: ActivityNotFoundException) {
             Toast.makeText(context, getString(R.string.sharing_not_available, ex.message),
                 Toast.LENGTH_LONG).show()
