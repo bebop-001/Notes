@@ -425,15 +425,28 @@ class EditWindow : Fragment(), FontSizeChangedListener {
             .apply()
     }
     // Share the current file.
-    private fun shareFile() {
+    private fun shareFile(asAttachment : Boolean = true) {
         try {
-            ShareCompat.IntentBuilder.from(activity)
+            val builder = ShareCompat.IntentBuilder.from(activity)
             .setType(Intent.ACTION_SEND)
-            .setSubject(getString(R.string.sharing_file_named, currentFileProperties.displayName))
-            .setText(getString(R.string.sharing_file_named, currentFileProperties.displayName))
             .setType("text/plain")
-            .addStream(Uri.parse(currentFileProperties.uri))
-            .startChooser()
+            .setSubject(getString(R.string.sharing_file_named, currentFileProperties.displayName))
+            if (asAttachment) {
+                // send text as an attachment
+                builder.setText(
+                    getString(R.string.sharing_file_named, currentFileProperties.displayName)
+                )
+                    .addStream(Uri.parse(currentFileProperties.uri))
+            }
+            else {// TODO: add "send inline option."
+                // send text as message
+                builder.setText(
+                    getString(R.string.sharing_file_named, currentFileProperties.displayName) +
+                            "\n===\n" +
+                            editWindowTV.text
+                )
+            }
+            builder.startChooser()
         } catch (ex: Exception) {
             Toast.makeText(context, getString(R.string.sharing_failed, ex.message),
                 Toast.LENGTH_LONG).show()
@@ -458,7 +471,21 @@ class EditWindow : Fragment(), FontSizeChangedListener {
         var rv = true
         Log.d("EditWindow:", "onOptionsItemSelected called")
         when (item.itemId) {
-            R.id.share_menu_item -> shareFile()
+            R.id.share_menu_item -> {
+                val promptMess = context!!.getString(
+                    R.string.send_file_as_attachment
+                )
+                val buttonIds = intArrayOf(R.string.NO, R.string.YES)
+                val buttonCallbacks: Array<() -> Unit> =
+                    arrayOf(
+                        { shareFile(false)  }, // no
+                        { shareFile(true)   }  // yes
+                    )
+                yesNoDialog(
+                    context!! ,false, promptMess,
+                    buttonIds, buttonCallbacks
+                )
+            }
             R.id.save_file_item -> getSaveFile()
             R.id.save_as_file_item -> getSaveFileAs()
             R.id.open_file_item -> getOpenFile()
