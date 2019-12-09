@@ -40,6 +40,7 @@ import java.io.BufferedReader
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStreamReader
+import java.lang.Exception
 
 
 private const val CREATE_REQUEST_CODE   = 40
@@ -433,8 +434,8 @@ class EditWindow : Fragment(), FontSizeChangedListener {
             .setType("text/plain")
             .addStream(Uri.parse(currentFileProperties.uri))
             .startChooser()
-        } catch (ex: ActivityNotFoundException) {
-            Toast.makeText(context, getString(R.string.sharing_not_available, ex.message),
+        } catch (ex: Exception) {
+            Toast.makeText(context, getString(R.string.sharing_failed, ex.message),
                 Toast.LENGTH_LONG).show()
         }
     }

@@ -71,6 +71,6 @@
 
     <string name="share_file">Share File</string>
     <string name="sharing_file_named">Notes:file "%1$s"</string>
-    <string name="sharing_not_available">Sharing not available: error %1$s</string>
+    <string name="sharing_failed">Sharing Failed: error %1$s</string>
 
 </resources>
