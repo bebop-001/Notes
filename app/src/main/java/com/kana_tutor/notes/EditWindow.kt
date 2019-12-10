@@ -438,7 +438,7 @@ class EditWindow : Fragment(), FontSizeChangedListener {
                 )
                     .addStream(Uri.parse(currentFileProperties.uri))
             }
-            else {// TODO: add "send inline option."
+            else {
                 // send text as message
                 builder.setText(
                     getString(R.string.sharing_file_named, currentFileProperties.displayName) +
