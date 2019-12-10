@@ -86,6 +86,9 @@ class FileProperties {
                 Os.readlink(procFile.toString())
             else
                 procFile.canonicalPath
+            Log.d("FileProperties:"
+                , String.format("%s: %s -> %s", displayName, uriPath, fileName))
+
         }
         this.uri = uri.toString()
     }
