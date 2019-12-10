@@ -22,6 +22,7 @@ import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.provider.DocumentsContract
 import android.system.Os
+import android.util.Log
 import androidx.core.content.ContextCompat
 import java.io.File
 import java.util.*
@@ -41,12 +42,24 @@ class FileProperties {
     var fileName = ""
 
     // extension functions.
-    private fun Cursor.getKeyedString(key: String): String
-            = getString(getColumnIndex(key))
-    private fun Cursor.getKeyedInt(key: String): Int
-            = getInt(getColumnIndex(key))
-    private fun Cursor.getKeyedLong(key: String): Long
-            = getLong(getColumnIndex(key))
+    private fun Cursor.getKeyedString(key: String): String {
+        val idx = getColumnIndex(key)
+        if (idx >= 0) return getString(idx)
+        Log.d("getKeyedString:", String.format("%s:Unknown index", key))
+        return ""
+    }
+    private fun Cursor.getKeyedInt(key: String): Int {
+        val idx = getColumnIndex(key)
+        if (idx >= 0) return getInt(idx)
+        Log.d("getKeyedString:", String.format("%s:Unknown index", key))
+        return 0
+    }
+    private fun Cursor.getKeyedLong(key: String): Long {
+        val idx = getColumnIndex(key)
+        if (idx >= 0) return getLong(idx)
+        Log.d("getKeyedString:", String.format("%s:Unknown index", key))
+        return 0L
+    }
     constructor(context : Context, uri : Uri) {
         val c = context.contentResolver.query(
             uri, null, null, null, null)
@@ -55,7 +68,7 @@ class FileProperties {
             size = getKeyedInt(DocumentsContract.Document.COLUMN_SIZE)
             displayName = getKeyedString(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
             lastModified = getKeyedLong(DocumentsContract.Document.COLUMN_LAST_MODIFIED)
-            lastModifiedDate = Date(lastModified).toString()
+            lastModifiedDate =  if (lastModified > 0L) Date(lastModified).toString() else "Not available"
             // we're ignoring this property for Storage Access Framework.  You can't alter it.
             // isWritable = (getKeyedInt(DocumentsContract.Document.COLUMN_FLAGS) and DocumentsContract.Document.FLAG_SUPPORTS_WRITE) != 0
             documentId = getKeyedString(DocumentsContract.Document.COLUMN_DOCUMENT_ID)

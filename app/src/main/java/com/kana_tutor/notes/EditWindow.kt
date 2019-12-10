@@ -198,14 +198,14 @@ class EditWindow : Fragment(), FontSizeChangedListener {
             }
         })
         // Things work ok with listener commented out.  for demo only.
-        editWindowTV.setOnTouchListener { v, event ->
+        editWindowTV.setOnTouchListener { _, event ->
             Log.d("OnTouch:", String.format("event=%s", event.toString()))
             // imm.showSoftInput(v, InputMethodManager.SHOW_FORCED)
 
             false // set false indicating listener handled event.
         }
         // for demo
-        editWindowTV.setOnFocusChangeListener { v, hasFocus ->
+        editWindowTV.setOnFocusChangeListener { _, hasFocus ->
             Log.d("OnFocusChangeListener"
                 , String.format("hasFocus:%s", hasFocus.toString()))
         }
@@ -219,11 +219,11 @@ class EditWindow : Fragment(), FontSizeChangedListener {
             kToast(context!!, getString(R.string.is_write_protected, p.displayName))
         }
         else {
-            val pfd = context!!
+            try {
+                val pfd = context!!
                 .contentResolver
                 .openFileDescriptor(uri, "w")
-            if (pfd != null) {
-                try {
+                if (pfd != null) {
                     val fileOutputStream = FileOutputStream(
                         pfd.fileDescriptor
                     )
@@ -241,16 +241,13 @@ class EditWindow : Fragment(), FontSizeChangedListener {
                             , currentFileProperties.size
                         )
                     )
-                } catch (e: IOException) {
-                    throw RuntimeException(
-                        "Open for write failed:" + e.message + e.stackTrace
-                    )
                 }
             }
-            else
+            catch (e: Exception) {
                 throw RuntimeException(
-                    this.context!!.getString(R.string.save_uri_failed, uri.toString())
+                    "Open for write failed:" + e.message + e.stackTrace
                 )
+            }
         }
     }
     private fun newFile(uri: Uri) {
