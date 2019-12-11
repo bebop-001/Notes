@@ -24,6 +24,7 @@ import android.provider.DocumentsContract
 import android.system.Os
 import android.util.Log
 import androidx.core.content.ContextCompat
+import com.kana_tutor.notes.kanautils.kToast
 import java.io.File
 import java.util.*
 
@@ -86,9 +87,12 @@ class FileProperties {
                 Os.readlink(procFile.toString())
             else
                 procFile.canonicalPath
-            Log.d("FileProperties:"
-                , String.format("%s: %s -> %s", displayName, uriPath, fileName))
-
+            val f = File(fileName)
+            kToast(context
+                , String.format("%s: %s\n -> %s\nModified:%s\nsize:%d bytes"
+                    , displayName, uriPath, fileName
+                    , Date(f.lastModified()).toString(), f.length())
+            )
         }
         this.uri = uri.toString()
     }
