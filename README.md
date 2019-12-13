@@ -17,6 +17,26 @@ through whatever is current (API-29 right now)
 I can't see how to make this work under Windows so it
 currently builds only under Linux.
 
+
+Fri Dec 13 12:10:02 PST 2019
+Investigations into large file performance:<br>
+Since the main interface to the file is an EditText, I was concerned
+about how the app would work with large files.  What I found was:<br/>
+* editing a test file of about 500k crashes the app.  The crash happens
+while loading the EditText, however reading the file into a string works ok.
+    * Read for API-19 device: Size:550011 bytes, time:1.18200 seconds
+    * Read for API-26 device: Size:550011 bytes, time:0.09500 seconds
+    * for both devices trying to load this file into the EditText
+    generated an android.os.TransactionTooLargeException
+
+However both devices can load a 275011 byte file ok so I'm not going to
+worry any further about this.  To load a very big
+file I think the best approach would be to read the file into a
+byte array and write a custom scrolled EditText that used Windowed
+interface so the EditText didn't need to deal with the very large
+strings.  However -- that's more work than I want to do on this
+at the moment.
+
 Sun Dec  8 15:00:36 PST 2019
 Added a menu item to allow sharing the current file.
 

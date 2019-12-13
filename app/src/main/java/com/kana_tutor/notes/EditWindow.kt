@@ -41,6 +41,7 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStreamReader
 import java.lang.Exception
+import kotlin.system.measureTimeMillis
 
 
 private const val CREATE_REQUEST_CODE   = 40
@@ -272,12 +273,20 @@ class EditWindow : Fragment(), FontSizeChangedListener {
 
             var currentLine = reader.readLine()
 
-            while (currentLine != null) {
-                stringBuilder.append(currentLine + "\n")
-                currentLine = reader.readLine()
+            val readTime = measureTimeMillis {
+                // while (currentLine != null && stringBuilder.toString().length < 200000) {
+                while (currentLine != null) {
+                    stringBuilder.append(currentLine + "\n")
+                    currentLine = reader.readLine()
+                }
+                // Log.d("FoundEnd:", (currentLine == null).toString())
+                inputStream.close()
             }
-            inputStream.close()
-
+            val s = stringBuilder.toString()
+            Log.d(
+                "read:",
+                String.format("Size:%d, time:%2.5f seconds", s.length, readTime / 1000f)
+            )
             // set the font size.  Use the default font size if user hasn't previously
             // selected a font size.  If user selected a fontSize for the current file,
             // it was saved to the user preferences using the uri path + ".fontSize" as a key.
@@ -286,7 +295,18 @@ class EditWindow : Fragment(), FontSizeChangedListener {
                     .getSharedPreferences(editWinPrefsName, Context.MODE_PRIVATE)
                     .getFloat(uri.path + ".fontSize", fontDefaultSize))
 
-            editWindowTV.text = stringBuilder.toString()
+            // editWindowTV.text = stringBuilder.toString()
+            val loadTime = measureTimeMillis {
+                try {
+                    editWindowTV.text = s
+                } catch (e: RuntimeException) {
+                    Log.d("Exception:", e.message)
+                }
+            }
+            Log.d(
+                "load:",
+                String.format("Size:%d, time:%2.5f seconds", s.length, loadTime / 1000f)
+            )
 
             currentFileProperties = FileProperties(context!!, uri)
             editWindowTextChanges = 0
