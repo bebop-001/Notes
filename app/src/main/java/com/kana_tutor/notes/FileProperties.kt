@@ -88,11 +88,12 @@ class FileProperties {
             else
                 procFile.canonicalPath
             val f = File(fileName)
+            /*
             kToast(context
                 , String.format("%s: %s\n -> %s\nModified:%s\nsize:%d bytes"
                     , displayName, uriPath, fileName
                     , Date(f.lastModified()).toString(), f.length())
-            )
+            ) */
         }
         this.uri = uri.toString()
     }
