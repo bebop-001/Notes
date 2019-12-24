@@ -41,6 +41,7 @@ class FileProperties {
     private var authority = ""
     var uriPath = ""
     var fileName = ""
+    var scopedAccess = true
 
     // extension functions.
     private fun Cursor.getKeyedString(key: String): String {
@@ -64,20 +65,24 @@ class FileProperties {
     constructor(context : Context, uri : Uri) {
         val c = context.contentResolver.query(
             uri, null, null, null, null)
-        c?.apply {
-            moveToFirst()
-            size = getKeyedInt(DocumentsContract.Document.COLUMN_SIZE)
-            displayName = getKeyedString(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
-            lastModified = getKeyedLong(DocumentsContract.Document.COLUMN_LAST_MODIFIED)
-            lastModifiedDate =  if (lastModified > 0L) Date(lastModified).toString() else "Not available"
-            // we're ignoring this property for Storage Access Framework.  You can't alter it.
-            // isWritable = (getKeyedInt(DocumentsContract.Document.COLUMN_FLAGS) and DocumentsContract.Document.FLAG_SUPPORTS_WRITE) != 0
-            documentId = getKeyedString(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
-            authority = uri.authority.toString()
-            uriPath = uri.path ?: ""
-            isEmpty = false
+        if (c != null) {
+            c.apply {
+                moveToFirst()
+                size = getKeyedInt(DocumentsContract.Document.COLUMN_SIZE)
+                displayName = getKeyedString(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
+                lastModified = getKeyedLong(DocumentsContract.Document.COLUMN_LAST_MODIFIED)
+                lastModifiedDate =
+                    if (lastModified > 0L) Date(lastModified).toString() else "Not available"
+                // we're ignoring this property for Storage Access Framework.  You can't alter it.
+                // isWritable = (getKeyedInt(DocumentsContract.Document.COLUMN_FLAGS) and DocumentsContract.Document.FLAG_SUPPORTS_WRITE) != 0
+                documentId = getKeyedString(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
+                authority = uri.authority.toString()
+                uriPath = uri.path ?: ""
+                isEmpty = false
+                c.close()
+            }
         }
-        c?.close()
+        else scopedAccess = false
         // based on code from https://stackoverflow.com/questions/30546441/
         // android-open-file-with-intent-chooser-from-uri-obtained-by-storage-access-frame
         val pf : ParcelFileDescriptor? = context.contentResolver.openFileDescriptor(uri, "r")
@@ -87,13 +92,14 @@ class FileProperties {
                 Os.readlink(procFile.toString())
             else
                 procFile.canonicalPath
+            if (displayName == "")
+                displayName = fileName.substring(fileName.lastIndexOf("/") + 1)
             val f = File(fileName)
-            /*
             kToast(context
                 , String.format("%s: %s\n -> %s\nModified:%s\nsize:%d bytes"
                     , displayName, uriPath, fileName
                     , Date(f.lastModified()).toString(), f.length())
-            ) */
+            )
         }
         this.uri = uri.toString()
     }

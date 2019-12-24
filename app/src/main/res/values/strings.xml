@@ -57,6 +57,7 @@
 
     <string name="is_writable">🔓 Read/Write</string>
     <string name="is_read_only">🔒 Read Only</string>
+    <string name="system_read_only">❌ Read Only</string>
     <string name="is_write_protected">Sorry. %1$s is write protected.</string>
 
     <!-- For select font size. -->

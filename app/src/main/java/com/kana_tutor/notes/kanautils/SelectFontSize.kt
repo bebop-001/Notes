@@ -49,7 +49,7 @@ fun selectFontSize(activity : Activity, listener : FontSizeChangedListener) {
         // positive is the left button which I associate with cancel
         .setPositiveButton(R.string.cancel, null)
         .setNegativeButton(R.string.select) {
-                dialog,which ->
+                dialog,_ ->
             listener.fontSizeChanged(sampleView.textSize)
             dialog.dismiss()
         }

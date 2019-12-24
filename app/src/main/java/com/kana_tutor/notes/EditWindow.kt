@@ -18,7 +18,6 @@ package com.kana_tutor.notes
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -48,7 +47,7 @@ private const val OPEN_REQUEST_CODE = CREATE_REQUEST_CODE  + 1
 private const val SAVE_AS_REQUEST_CODE = OPEN_REQUEST_CODE + 1
 
 class EditWindow : Fragment(), FontSizeChangedListener {
-    private var stringUri: String? = null
+    private var stringUri  = ""
     companion object {
         /*
          * Use this factory method to create a new instance of
@@ -73,7 +72,10 @@ class EditWindow : Fragment(), FontSizeChangedListener {
             else {
                 val changed = if (editWindowTextChanges > 0) "✔️" else " "
                 val writeProtected =
-                    if (currentFileProperties.internalWriteProtect) "🔒" else "\uD83D\uDD13"
+                    if (currentFileProperties.scopedAccess) {
+                        if (currentFileProperties.internalWriteProtect) "🔒" else "\uD83D\uDD13"
+                    }
+                    else "❌"
                 changed + writeProtected + currentFileProperties.displayName
             }
             return _currentFileTitle
@@ -116,7 +118,8 @@ class EditWindow : Fragment(), FontSizeChangedListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
-            stringUri = it.getString("stringUri")
+            stringUri = it.getString("stringUri", "")
+            Log.d("Frag:onCreate", "stringUri = \"${stringUri}\"")
         }
     }
 
@@ -144,7 +147,7 @@ class EditWindow : Fragment(), FontSizeChangedListener {
         }
 
         editWindowTV.addOnLayoutChangeListener(
-            fun (v: View,
+            fun (_: View,
                 left: Int, top: Int, right: Int, bottom: Int,
                 oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) {
                 Log.d("onLayoutChanged:",
@@ -211,6 +214,8 @@ class EditWindow : Fragment(), FontSizeChangedListener {
         }
 
         setHasOptionsMenu(true)
+        if (stringUri != "")
+            openFile(Uri.parse(stringUri))
         return view
     }
     private fun saveToUri(uri : Uri, whoResId : Int) {
@@ -221,8 +226,8 @@ class EditWindow : Fragment(), FontSizeChangedListener {
         else {
             try {
                 val pfd = context!!
-                .contentResolver
-                .openFileDescriptor(uri, "w")
+                    .contentResolver
+                    .openFileDescriptor(uri, "w")
                 if (pfd != null) {
                     val fileOutputStream = FileOutputStream(
                         pfd.fileDescriptor
@@ -264,7 +269,7 @@ class EditWindow : Fragment(), FontSizeChangedListener {
 
         Log.d("newFileContents:", currentFileProperties.toString())
     }
-    private fun openFile(uri:Uri) {
+    fun openFile(uri:Uri) {
         try {
             val inputStream = context!!.contentResolver.openInputStream(uri)!!
             val reader = BufferedReader(InputStreamReader(inputStream))
@@ -299,6 +304,7 @@ class EditWindow : Fragment(), FontSizeChangedListener {
                     , currentFileTitle, currentFileProperties.size
                 )
             )
+            setTitleBar(currentFileProperties.displayName)
 
             Log.d("openFile:", currentFileProperties.toString())
         } catch (e: IOException) {
@@ -397,7 +403,6 @@ class EditWindow : Fragment(), FontSizeChangedListener {
                     if (resultData != null && resultData.data != null) {
                         val uri = resultData.data!!
                         openFile(uri)
-                        setTitleBar(currentFileProperties.displayName)
                     }
                 }
                 else -> throw RuntimeException(String.format("onActivityResult" +
@@ -504,13 +509,17 @@ class EditWindow : Fragment(), FontSizeChangedListener {
                 val readOnly =
                     writeProtectedFiles!!.contains(currentFileProperties.uriPath)
                     || currentFileProperties.displayName == ""
+                    || currentFileProperties.scopedAccess == false
                 // disable save unless we have a file.
                 findItem(R.id.save_file_item).isEnabled = !readOnly
                 val writeProtectItem = findItem(R.id.write_protect_file_item)!!
                 writeProtectItem.isEnabled = !isEmpty
                 writeProtectItem.title = getString(
-                    if (readOnly) R.string.is_read_only
-                    else R.string.is_writable
+                    if (scopedAccess) {
+                        if (readOnly) R.string.is_read_only
+                        else R.string.is_writable
+                    }
+                else R.string.system_read_only
                 )
                 findItem(R.id.select_font_size).isEnabled =
                     ! currentFileProperties.isEmpty

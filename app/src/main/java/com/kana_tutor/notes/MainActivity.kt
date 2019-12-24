@@ -20,6 +20,7 @@
 package com.kana_tutor.notes
 
 import android.content.*
+import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 
@@ -37,6 +38,9 @@ import kotlinx.android.synthetic.main.activity_main.*
 import androidx.appcompat.app.AppCompatDelegate
 import com.kana_tutor.notes.kanautils.displayUsage
 import com.kana_tutor.notes.kanautils.selectFontSize
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStreamReader
 
 
 const val appPrefsFileName = "userPrefs.xml"
@@ -44,7 +48,9 @@ class MainActivity : AppCompatActivity(), EditWindow.EditWinEventListener {
 
     companion object {
         var displayTheme = 0 // for light or dark theme.
-        private lateinit var currentEditWindow : EditWindow
+        private var currentEditWindow : EditWindow? = null
+        var intentUri = ""
+        val editWindows : MutableList<EditWindow> = mutableListOf()
     }
 
     private lateinit var _userPreferences : SharedPreferences
@@ -75,12 +81,21 @@ class MainActivity : AppCompatActivity(), EditWindow.EditWinEventListener {
         else
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
 
-        currentEditWindow = EditWindow.newInstance("hello world")
+        if (intent != null) {
+            if (intent.type == "text/plain" && intent.data != null) {
+                intentUri = intent.data.toString()
+                currentEditWindow = null
+            }
+        }
+        Log.d("after:", String.format("intUri:\"%s\", currentEditWindow:\"%s\"",
+            intentUri, currentEditWindow?.toString() ?: "NULL"))
 
-        if (savedInstanceState == null) {
+        if (currentEditWindow == null) {
+            currentEditWindow = EditWindow.newInstance(intentUri)
+
             val manager = supportFragmentManager
             val transaction = manager.beginTransaction()
-            transaction.add(R.id.fragment_placeholder, currentEditWindow)
+            transaction.add(R.id.fragment_placeholder, currentEditWindow!!)
             transaction.commit()
         }
 
@@ -93,7 +108,7 @@ class MainActivity : AppCompatActivity(), EditWindow.EditWinEventListener {
 
     override fun onResume() {
         super.onResume()
-        supportActionBar!!.title = currentEditWindow.currentFileTitle
+        supportActionBar!!.title = currentEditWindow!!.currentFileTitle
     }
 
     private fun changeDisplayTheme(newTheme : String) : Boolean {
@@ -136,7 +151,7 @@ class MainActivity : AppCompatActivity(), EditWindow.EditWinEventListener {
     }
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         Log.d("MainActivity:", "onCreateOptionsMenu called")
-        var rv = super.onCreateOptionsMenu(menu)
+        super.onCreateOptionsMenu(menu)
 
         val inflater = menuInflater
         inflater.inflate(R.menu.main_menu, menu)

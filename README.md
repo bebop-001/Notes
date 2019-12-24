@@ -17,6 +17,18 @@ through whatever is current (API-29 right now)
 I can't see how to make this work under Windows so it
 currently builds only under Linux.
 
+Mon Dec 23 16:42:39 PST 2019
+We now open a file passed by clicking on a .txt file from the file
+manager or intent for starting mime plain/text file.  It's a little
+clumsy in that files checked out this way are read-only as indicated by
+an emogi red-x in the lock field and "Save File" being disabled.  Files
+opened and edited this way can be saved using "Save As" and can even
+over-write the file that was originally opened.  This has to do with
+the fact that the files are opened differently.  Files opened through the
+Storage Access Framework -- using the Storage Access File Browser --
+can be re-written.  Files opened via a generic
+intent from another app (eg file manager) can not be written using
+the same URI as they were opened with.
 
 Fri Dec 13 12:10:02 PST 2019
 Investigations into large file performance:<br>
