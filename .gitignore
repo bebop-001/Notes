@@ -4,9 +4,8 @@
 app/lint.xml
 .idea
 /build
-/captures
-.externalNativeBuild
-.cxx
+
 *.sw*
 */*.sw*
 err
+t
