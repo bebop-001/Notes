@@ -3,25 +3,25 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/select_display_theme"
-        android:orderInCategory="2"
+        android:orderInCategory="99"
         android:title="@string/dark_theme"
         app:showAsAction="never"
         />
     <item
         android:id="@+id/select_font_size"
-        android:orderInCategory="2"
+        android:orderInCategory="99"
         android:title="@string/select_font_size"
         app:showAsAction="never"
         />
     <item
         android:id="@+id/usage_item"
-        android:orderInCategory="2"
+        android:orderInCategory="99"
         android:title="@string/usage"
         app:showAsAction="never"
         />
     <item
         android:id="@+id/build_info_item"
-        android:orderInCategory="2"
+        android:orderInCategory="99"
         android:title="@string/build_info"
         app:showAsAction="never"
         />

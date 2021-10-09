@@ -20,6 +20,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
@@ -29,9 +30,11 @@ import android.util.Log
 import android.util.TypedValue
 import android.view.*
 import android.webkit.WebView
+import android.widget.EditText
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ShareCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -49,7 +52,8 @@ private const val SAVE_AS_REQUEST_CODE = OPEN_REQUEST_CODE + 1
 
 @Suppress("DEPRECATION")
 class EditWindow : Fragment(), FontSizeChangedListener {
-    private var stringUri  = ""
+    private lateinit var stringUri : String
+    private lateinit var clipboardText : String
     companion object {
         /*
          * Use this factory method to create a new instance of
@@ -121,14 +125,20 @@ class EditWindow : Fragment(), FontSizeChangedListener {
         super.onCreate(savedInstanceState)
         arguments?.let {
             stringUri = it.getString("stringUri", "")
-            Log.d("Frag:onCreate", "stringUri = \"${stringUri}\"")
+            clipboardText = it.getString("clipboardText", "")
+            Log.d("Frag:onCreate", "stringUri = \"${stringUri}\":clibboardText:\"$clipboardText\"")
         }
     }
 
+    private lateinit var  _editWinPrefs: SharedPreferences
+    private val editWinPrefs: SharedPreferences
+        get() = _editWinPrefs
+    private lateinit var editWindow: TextView
+    private lateinit var searchLayout: ConstraintLayout
+    private lateinit var searchEditText: EditText
+    private lateinit var editWindowScrollView: ScrollView
 
-    private lateinit var editWindowTV: TextView
-    private lateinit var scrollView: ScrollView
-
+    private var searchLayoutVisible = true
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -136,19 +146,18 @@ class EditWindow : Fragment(), FontSizeChangedListener {
     ): View? {
         // Inflate the layout for this fragment
         val view =  inflater.inflate(R.layout.edit_window, container, false)
-        editWindowTV = view.findViewById(R.id.edit_window_tv)
-        scrollView = view.findViewById(R.id.edit_window_scrollview)
-        val prefs = requireContext()
-            .getSharedPreferences(editWinPrefsName, Context.MODE_PRIVATE)
+        _editWinPrefs = requireContext()
+            .getSharedPreferences("editWindowPreferences", Context.MODE_PRIVATE)
         writeProtectedFiles  =
-            prefs.getStringSet("writeProtected", HashSet<String>())
-        fontDefaultSize = prefs.getFloat("fontDefaultSize", -1.0f)
-        if (fontDefaultSize < 0) {
-            fontDefaultSize = editWindowTV.textSize
-            prefs.edit().putFloat("fontDefaultSize", fontDefaultSize).apply()
-        }
+            editWinPrefs.getStringSet("writeProtected", HashSet<String>())
+        fontDefaultSize = editWinPrefs.getFloat("fontDefaultSize", -1.0f)
 
-        editWindowTV.addOnLayoutChangeListener(
+        editWindow = view.findViewById(R.id.edit_window_tv)
+        if (fontDefaultSize < 0) {
+            fontDefaultSize = editWindow.textSize
+            editWinPrefs.edit().putFloat("fontDefaultSize", fontDefaultSize).apply()
+        }
+        editWindow.addOnLayoutChangeListener(
             fun (_: View,
                 left: Int, top: Int, right: Int, bottom: Int,
                 oldLeft: Int, oldTop: Int, oldRight: Int, oldBottom: Int) {
@@ -160,7 +169,7 @@ class EditWindow : Fragment(), FontSizeChangedListener {
                         oldLeft, oldTop, oldRight, oldBottom))
             }
         )
-        editWindowTV.addTextChangedListener(object : TextWatcher {
+        editWindow.addTextChangedListener(object : TextWatcher {
             /*
             fun CharSequence.shortChangeMess(start:Int, count:Int) : String {
                 var rv = subSequence(start, start + count)
@@ -203,21 +212,31 @@ class EditWindow : Fragment(), FontSizeChangedListener {
             }
         })
         // Things work ok with listener commented out.  for demo only.
-        editWindowTV.setOnTouchListener { _, event ->
+        editWindow.setOnTouchListener { _, event ->
             Log.d("OnTouch:", String.format("event=%s", event.toString()))
             // imm.showSoftInput(v, InputMethodManager.SHOW_FORCED)
 
             false // set false indicating listener handled event.
         }
         // for demo
-        editWindowTV.setOnFocusChangeListener { _, hasFocus ->
+        editWindowScrollView = view.findViewById(R.id.edit_window_scrollview)
+        editWindowScrollView.setOnFocusChangeListener { _, hasFocus ->
             Log.d("OnFocusChangeListener"
                 , String.format("hasFocus:%s", hasFocus.toString()))
         }
+        searchLayout = view.findViewById(R.id.search_layout)
+        searchLayout.visibility =
+            if (editWinPrefs.getBoolean(
+            "searchLayoutGone", true))
+                View.GONE
+            else View.VISIBLE
+        searchEditText = view.findViewById(R.id.search_edittext)
 
         setHasOptionsMenu(true)
         if (stringUri != "")
             openFile(Uri.parse(stringUri))
+        if (clipboardText.isNotEmpty())
+            editWindow.setText(clipboardText)
         return view
     }
     private fun saveToUri(uri : Uri, whoResId : Int) {
@@ -234,7 +253,7 @@ class EditWindow : Fragment(), FontSizeChangedListener {
                     val fileOutputStream = FileOutputStream(
                         pfd.fileDescriptor
                     )
-                    val textContent = editWindowTV.text.toString()
+                    val textContent = editWindow.text.toString()
                     fileOutputStream.write(textContent.toByteArray())
                     fileOutputStream.close()
                     editWindowTextChanges = 0
@@ -259,7 +278,7 @@ class EditWindow : Fragment(), FontSizeChangedListener {
     }
     private fun newFile(uri: Uri) {
         // unless there is a file open, clear the edit text view.
-        if (! currentFileProperties.isEmpty) editWindowTV.text = ""
+        if (! currentFileProperties.isEmpty) editWindow.text = ""
         if (writeProtectedFiles!!.contains(uri.path)) {
             val p = FileProperties(requireContext(), uri)
             kToast(requireContext(), getString(R.string.is_write_protected, p.displayName))
@@ -288,12 +307,12 @@ class EditWindow : Fragment(), FontSizeChangedListener {
             // set the font size.  Use the default font size if user hasn't previously
             // selected a font size.  If user selected a fontSize for the current file,
             // it was saved to the user preferences using the uri path + ".fontSize" as a key.
-            editWindowTV.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+            editWindow.setTextSize(TypedValue.COMPLEX_UNIT_PX,
                 requireContext()
                     .getSharedPreferences(editWinPrefsName, Context.MODE_PRIVATE)
                     .getFloat(uri.path + ".fontSize", fontDefaultSize))
 
-            editWindowTV.text = stringBuilder.toString()
+            editWindow.text = stringBuilder.toString()
 
             currentFileProperties = FileProperties(requireContext(), uri)
             editWindowTextChanges = 0
@@ -446,7 +465,7 @@ class EditWindow : Fragment(), FontSizeChangedListener {
                 builder.setText(
                     getString(R.string.sharing_file_named, currentFileProperties.displayName) +
                             "\n===\n" +
-                            editWindowTV.text
+                            editWindow.text
                 )
             }
             builder.startChooser()
@@ -460,13 +479,13 @@ class EditWindow : Fragment(), FontSizeChangedListener {
     // for the current file save it to user preferences using the
     // uri path + ".fontSize" as a key.
     override fun fontSizeChanged(newSize: Float) {
-        editWindowTV.invalidate()
+        editWindow.invalidate()
         requireContext()
             .getSharedPreferences(editWinPrefsName, Context.MODE_PRIVATE)
             .edit()
             .putFloat(currentFileProperties.uriPath + ".fontSize", newSize)
             .apply()
-        editWindowTV.setTextSize(TypedValue.COMPLEX_UNIT_PX, newSize)
+        editWindow.setTextSize(TypedValue.COMPLEX_UNIT_PX, newSize)
     }
 
     // Menu item selected listener.
@@ -488,6 +507,23 @@ class EditWindow : Fragment(), FontSizeChangedListener {
                     requireContext() ,false, promptMess,
                     buttonIds, buttonCallbacks
                 )
+            }
+            R.id.search_text_item -> {
+                searchLayout.visibility =
+                    if (searchLayout.visibility == View.GONE) {
+                        View.VISIBLE
+                    }
+                    else {
+                        requireActivity()
+                            .hideKeyboard(searchEditText)
+                            .clearTextView()
+                        View.GONE
+                    }
+                editWinPrefs.edit()
+                    .putBoolean(
+                        "searchLayoutGone",
+                        searchLayout.visibility == View.GONE)
+                    .apply()
             }
             R.id.save_file_item -> getSaveFile()
             R.id.save_as_file_item -> getSaveFileAs()

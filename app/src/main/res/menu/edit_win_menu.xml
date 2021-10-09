@@ -3,6 +3,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     >
     <item
+        android:id="@+id/search_text_item"
+        android:enabled="true"
+        android:icon="@android:drawable/ic_menu_search"
+        android:orderInCategory="1"
+        android:title="@string/search"
+        android:visible="true"
+        app:showAsAction="ifRoom" />
+
+    <item
         android:id="@+id/share_menu_item"
         android:enabled="true"
         android:icon="?attr/actionModeShareDrawable"
@@ -10,35 +19,40 @@
         android:title="@string/share_file"
         android:visible="true"
         app:showAsAction="ifRoom" />
-
     <item
         android:id="@+id/open_file_item"
         android:title="@string/open_file"
-        app:showAsAction="never"
-        />
-    <item
-        android:id="@+id/new_file_item"
-        android:title="@string/new_file"
+        android:orderInCategory="5"
         app:showAsAction="never"
         />
     <item
         android:id="@+id/save_file_item"
+        android:orderInCategory="5"
         android:title="@string/save_file"
         app:showAsAction="never"
         />
     <item
         android:id="@+id/save_as_file_item"
         android:title="@string/save_as_file"
+        android:orderInCategory="5"
+        app:showAsAction="never"
+        />
+    <item
+        android:id="@+id/new_file_item"
+        android:title="@string/new_file"
+        android:orderInCategory="7"
         app:showAsAction="never"
         />
     <item
         android:id="@+id/write_protect_file_item"
         android:title="@string/is_writable"
+        android:orderInCategory="9"
         app:showAsAction="never"
         />
     <item
         android:id="@+id/file_properties_item"
         android:title="@string/file_properties"
+        android:orderInCategory="9"
         app:showAsAction="never"
         />
 </menu>
