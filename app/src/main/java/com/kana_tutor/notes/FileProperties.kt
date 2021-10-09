@@ -40,7 +40,7 @@ class FileProperties {
     private var documentId = ""
     private var authority = ""
     var uriPath = ""
-    var fileName = ""
+    private var fileName = ""
     var scopedAccess = true
 
     // extension functions.
@@ -111,7 +111,7 @@ class FileProperties {
             , displayName, size, ! internalWriteProtect, lastModifiedDate,documentId, uri, fileName
         )
     }
-    fun formatedProperties(context : Context) : String {
+    fun formattedProperties(context : Context) : String {
         val writable = !isEmpty && !internalWriteProtect
         return String.format(
             context.getString(R.string.file_properties_format)

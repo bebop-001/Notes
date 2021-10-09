@@ -17,6 +17,8 @@
             android:focusable="true"
             android:gravity="start"
             android:inputType="textMultiLine"
-            android:padding="10dp" />
+            android:padding="10dp"
+            tools:ignore="LabelFor"
+            android:importantForAutofill="no" />
 
 </ScrollView>

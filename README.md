@@ -21,7 +21,7 @@ Mon Dec 23 16:42:39 PST 2019
 We now open a file passed by clicking on a .txt file from the file
 manager or intent for starting mime plain/text file.  It's a little
 clumsy in that files checked out this way are read-only as indicated by
-an emogi red-x in the lock field and "Save File" being disabled.  Files
+an emoji red-x in the lock field and "Save File" being disabled.  Files
 opened and edited this way can be saved using "Save As" and can even
 over-write the file that was originally opened.  This has to do with
 the fact that the files are opened differently.  Files opened through the
@@ -63,7 +63,7 @@ added code to allow edit font size changes.  Not persistent yet but
 works.
 
 Wed Dec  4 13:21:49 PST 2019
-Added an internal file to keep trak of write-protected.  Not
+Added an internal file to keep track of write-protected.  Not
 real file-system write protect but better than nothing.
 
 Modified title in action bar to show file is modified and readonly/read-write.
