@@ -16,29 +16,30 @@
  *  and limitations under the License.
  */
 
+@file:Suppress("FunctionName")
+
 package com.kana_tutor.notes.kanautils
 
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.graphics.Color
-import android.graphics.Typeface
 import android.os.Build
 import android.text.Html
 import android.text.Spanned
 import android.text.method.LinkMovementMethod
+import android.util.Base64
 import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
-import android.view.ViewGroup
 import android.webkit.WebView
-import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.text.HtmlCompat
 import com.kana_tutor.notes.BuildConfig
 import com.kana_tutor.notes.R
+import com.kana_tutor.notes.monospaceDialog
 import java.io.File
 import java.text.SimpleDateFormat
 
@@ -67,12 +68,6 @@ fun htmlString(htmlString:String) : Spanned {
  * worth the effort.  Sigh....
  * d.getWindow().setBackgroundDrawableResource(R.color.transparent_black);
  * failed to do anything.
- * @param a                     application context
- * @param isHtmlQuery           boolean true if query string contains HTML
- * @param queryString           query string to be displayed
- * @param buttonStringResId     array of 1 or 2 int resource ids for string
- * to display on button
- * @param onClick               array of button onclick listeners for dialog
  */
 fun yesNoDialog(
     context: Context,
@@ -108,7 +103,7 @@ fun yesNoDialog(
     )
         .setIcon(R.mipmap.notes_launcher)
         .setView(query)
-    if (buttonStringResId.size < 1 || buttonStringResId.size > 2)
+    if (buttonStringResId.isEmpty() || buttonStringResId.size > 2)
         throw RuntimeException(
             String.format(
                 "yesNoDialog: expected 1 or 2 buttons.  Received %d", buttonStringResId.size
@@ -136,36 +131,34 @@ fun displayBuildInfo(activity : Activity) : Boolean {
     val appInfo = activity.packageManager
         .getApplicationInfo(BuildConfig.APPLICATION_ID, 0)
     val installTimestamp = File(appInfo.sourceDir).lastModified()
-
-    val webview = WebView(activity)
-    webview.setBackgroundColor(ContextCompat.getColor(activity, R.color.file_edit_window_bg))
-    webview.loadData(
-        activity.getString(R.string.build_info_query,
-        ContextCompat.getColor(activity, R.color.file_edit_window_font_color) and 0x00FFFFFF,
-        activity.getString(R.string.app_name),
-        BuildConfig.VERSION_CODE,
-        BuildConfig.VERSION_NAME,
-        SimpleDateFormat.getInstance().format(
-            java.util.Date(BuildConfig.BUILD_TIMESTAMP)),
-        SimpleDateFormat.getInstance().format(
-            java.util.Date(installTimestamp)),
-        if(BuildConfig.DEBUG) "debug" else "release"
+    val buildInfo = """Application name: %s
+                       |Version(%d, %s)
+                       |Build date:   %s
+                       |Install date: %s
+                       |Build type:   %s"""
+            .trimMargin("|").format(
+                activity.getString(R.string.app_name),
+                BuildConfig.VERSION_CODE,
+                BuildConfig.VERSION_NAME,
+                SimpleDateFormat.getInstance().format(
+                    java.util.Date(BuildConfig.BUILD_TIMESTAMP)),
+                SimpleDateFormat.getInstance().format(
+                    java.util.Date(installTimestamp)),
+                if(BuildConfig.DEBUG) "debug" else "release"
     )
-        , "text/html", "utf-8")
-    androidx.appcompat.app.AlertDialog.Builder(activity)
-        .setView(webview)
-        .show()
+    activity.monospaceDialog(activity.getString(R.string.build_info), buildInfo,12)
     return true
 }
 fun displayUsage (activity : Activity) : Boolean {
     val webview = WebView(activity)
     webview.setBackgroundColor(ContextCompat.getColor(activity, R.color.file_edit_window_bg))
-    webview.loadData(
-        activity.getString(R.string.usage_string,
-ContextCompat.getColor(activity, R.color.file_edit_window_font_color) and 0x00FFFFFF,
+    val unencodedHtml = activity.getString(R.string.usage_string,
+ContextCompat.getColor(activity,
+            R.color.file_edit_window_font_color) and 0x00FFFFFF,
             BuildConfig.VERSION_NAME, activity.getString(R.string.app_name)
         )
-        , "text/html", "utf-8")
+    val encodedHtml = Base64.encodeToString(unencodedHtml.toByteArray(), Base64.NO_PADDING)
+    webview.loadData(encodedHtml, "text/html",  "base64")
     androidx.appcompat.app.AlertDialog.Builder(activity)
         .setView(webview)
         .show()

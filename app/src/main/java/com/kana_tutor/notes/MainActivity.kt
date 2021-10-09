@@ -19,8 +19,8 @@
 
 package com.kana_tutor.notes
 
+import android.annotation.SuppressLint
 import android.content.*
-import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 
@@ -28,37 +28,32 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 
 import com.kana_tutor.notes.kanautils.displayBuildInfo
 import com.kana_tutor.notes.kanautils.promptForShortcut
 
-import kotlinx.android.synthetic.main.activity_main.*
 import androidx.appcompat.app.AppCompatDelegate
 import com.kana_tutor.notes.kanautils.displayUsage
-import com.kana_tutor.notes.kanautils.selectFontSize
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStreamReader
-
 
 const val appPrefsFileName = "userPrefs.xml"
 class MainActivity : AppCompatActivity(), EditWindow.EditWinEventListener {
 
+    @SuppressLint("StaticFieldLeak")
     companion object {
         var displayTheme = 0 // for light or dark theme.
         private var currentEditWindow : EditWindow? = null
         var intentUri = ""
-        val editWindows : MutableList<EditWindow> = mutableListOf()
+        var isNightMode = true
     }
 
     private lateinit var _userPreferences : SharedPreferences
     private val userPreferences : SharedPreferences
     get() = _userPreferences
 
-    var rootView : View? = null
+    private var rootView : View? = null
 
+    private lateinit var toolbar: androidx.appcompat.widget.Toolbar
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -76,10 +71,13 @@ class MainActivity : AppCompatActivity(), EditWindow.EditWinEventListener {
             promptForShortcut(this, MainActivity::class.java)
         }
         displayTheme = userPreferences.getInt("displayTheme", R.string.light_theme)
-        if (displayTheme == R.string.light_theme)
+        isNightMode = if (displayTheme == R.string.light_theme) {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-        else
+            false
+        } else {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+            true
+        }
 
         if (intent != null) {
             if (intent.type == "text/plain" && intent.data != null) {
@@ -99,6 +97,7 @@ class MainActivity : AppCompatActivity(), EditWindow.EditWinEventListener {
             transaction.commit()
         }
 
+        toolbar = rootView!!.findViewById(R.id.toolbar)
         toolbar.overflowIcon = ContextCompat.getDrawable(
             this, R.drawable.vert_ellipsis_light_img)
         setSupportActionBar(toolbar)
@@ -127,11 +126,11 @@ class MainActivity : AppCompatActivity(), EditWindow.EditWinEventListener {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         Log.d("MainActivity:", "onOptionsItemSelected called")
 
-        when (item.itemId) {
-            R.id.build_info_item        -> return displayBuildInfo(this)
-            R.id.usage_item             -> return displayUsage(this)
-            R.id.select_display_theme   -> return changeDisplayTheme(item.title.toString())
-            else                        -> return super.onOptionsItemSelected(item)
+        return when (item.itemId) {
+            R.id.build_info_item        -> displayBuildInfo(this)
+            R.id.usage_item             -> displayUsage(this)
+            R.id.select_display_theme   -> changeDisplayTheme(item.title.toString())
+            else                        -> super.onOptionsItemSelected(item)
         }
     }
 
@@ -140,7 +139,7 @@ class MainActivity : AppCompatActivity(), EditWindow.EditWinEventListener {
         super.onPrepareOptionsMenu(menu)
         menu!!.findItem(R.id.select_display_theme)
             .setTitle(
-                if (MainActivity.displayTheme == R.string.light_theme)
+                if (displayTheme == R.string.light_theme)
                     R.string.dark_theme
                 else
                     R.string.light_theme
@@ -158,7 +157,7 @@ class MainActivity : AppCompatActivity(), EditWindow.EditWinEventListener {
         return false
     }
 
-    var currentTitle = ""
+    private var currentTitle = ""
     override fun titleChanged(title: String) {
         if (supportActionBar != null && currentTitle != title) {
             currentTitle = title

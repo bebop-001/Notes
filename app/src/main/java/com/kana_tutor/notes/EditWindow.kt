@@ -24,6 +24,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Base64
 import android.util.Log
 import android.util.TypedValue
 import android.view.*
@@ -46,6 +47,7 @@ private const val CREATE_REQUEST_CODE   = 40
 private const val OPEN_REQUEST_CODE = CREATE_REQUEST_CODE  + 1
 private const val SAVE_AS_REQUEST_CODE = OPEN_REQUEST_CODE + 1
 
+@Suppress("DEPRECATION")
 class EditWindow : Fragment(), FontSizeChangedListener {
     private var stringUri  = ""
     companion object {
@@ -105,7 +107,7 @@ class EditWindow : Fragment(), FontSizeChangedListener {
     private var mainMenu : Menu? = null
     private fun setTitleBar(title : String) {
         // Item must be enabled here because the icon is outside
-        // of the menu pulldown and the pulldown activation is
+        // of the menu pull down and the pulldown activation is
         // what enables/disables the other menu items.
         if (mainMenu != null)
             mainMenu!!.findItem(R.id.share_menu_item).isEnabled =
@@ -136,7 +138,7 @@ class EditWindow : Fragment(), FontSizeChangedListener {
         val view =  inflater.inflate(R.layout.edit_window, container, false)
         editWindowTV = view.findViewById(R.id.edit_window_tv)
         scrollView = view.findViewById(R.id.edit_window_scrollview)
-        val prefs = context!!
+        val prefs = requireContext()
             .getSharedPreferences(editWinPrefsName, Context.MODE_PRIVATE)
         writeProtectedFiles  =
             prefs.getStringSet("writeProtected", HashSet<String>())
@@ -220,12 +222,12 @@ class EditWindow : Fragment(), FontSizeChangedListener {
     }
     private fun saveToUri(uri : Uri, whoResId : Int) {
         if (writeProtectedFiles!!.contains(uri.path)) {
-            val p = FileProperties(context!!, uri)
-            kToast(context!!, getString(R.string.is_write_protected, p.displayName))
+            val p = FileProperties(requireContext(), uri)
+            kToast(requireContext(), getString(R.string.is_write_protected, p.displayName))
         }
         else {
             try {
-                val pfd = context!!
+                val pfd = requireContext()
                     .contentResolver
                     .openFileDescriptor(uri, "w")
                 if (pfd != null) {
@@ -236,11 +238,11 @@ class EditWindow : Fragment(), FontSizeChangedListener {
                     fileOutputStream.write(textContent.toByteArray())
                     fileOutputStream.close()
                     editWindowTextChanges = 0
-                    currentFileProperties = FileProperties(context!!, uri)
+                    currentFileProperties = FileProperties(requireContext(), uri)
                     titleListener?.titleChanged(currentFileTitle)
                     Log.d("saveToUri:", currentFileProperties.toString())
                     kToast(
-                        this.context!!, getString(
+                        requireContext(), getString(
                             R.string.read_write_toast_fmt, getString(whoResId)
                             , getString(R.string.wrote), currentFileTitle
                             , currentFileProperties.size
@@ -259,19 +261,19 @@ class EditWindow : Fragment(), FontSizeChangedListener {
         // unless there is a file open, clear the edit text view.
         if (! currentFileProperties.isEmpty) editWindowTV.text = ""
         if (writeProtectedFiles!!.contains(uri.path)) {
-            val p = FileProperties(context!!, uri)
-            kToast(context!!, getString(R.string.is_write_protected, p.displayName))
+            val p = FileProperties(requireContext(), uri)
+            kToast(requireContext(), getString(R.string.is_write_protected, p.displayName))
         }
         else {
             saveToUri(uri, R.string.new_file)
-            currentFileProperties = FileProperties(context!!, uri)
+            currentFileProperties = FileProperties(requireContext(), uri)
         }
 
         Log.d("newFileContents:", currentFileProperties.toString())
     }
-    fun openFile(uri:Uri) {
+    private fun openFile(uri:Uri) {
         try {
-            val inputStream = context!!.contentResolver.openInputStream(uri)!!
+            val inputStream = requireContext().contentResolver.openInputStream(uri)!!
             val reader = BufferedReader(InputStreamReader(inputStream))
             val stringBuilder = StringBuilder()
 
@@ -287,18 +289,18 @@ class EditWindow : Fragment(), FontSizeChangedListener {
             // selected a font size.  If user selected a fontSize for the current file,
             // it was saved to the user preferences using the uri path + ".fontSize" as a key.
             editWindowTV.setTextSize(TypedValue.COMPLEX_UNIT_PX,
-                context!!
+                requireContext()
                     .getSharedPreferences(editWinPrefsName, Context.MODE_PRIVATE)
                     .getFloat(uri.path + ".fontSize", fontDefaultSize))
 
             editWindowTV.text = stringBuilder.toString()
 
-            currentFileProperties = FileProperties(context!!, uri)
+            currentFileProperties = FileProperties(requireContext(), uri)
             editWindowTextChanges = 0
             currentFileProperties.internalWriteProtect =
                 writeProtectedFiles!!.contains(currentFileProperties.uriPath)
             kToast(
-                this.context!!, getString(
+                requireContext(), getString(
                     R.string.read_write_toast_fmt, getString(R.string.open_file)
                     , getString(R.string.read)
                     , currentFileTitle, currentFileProperties.size
@@ -319,13 +321,12 @@ class EditWindow : Fragment(), FontSizeChangedListener {
     private fun saveAs(uri : Uri) = saveToUri(uri, R.string.save_as_file)
 
     private fun displayFileProperties() {
-        val webView = WebView(activity)
-        webView.setBackgroundColor(ContextCompat.getColor(context!!, R.color.file_edit_window_bg))
-        webView.loadData(
-                currentFileProperties.formatedProperties(context!!)
-            , "text/html", "utf-8"
-        )
-        androidx.appcompat.app.AlertDialog.Builder(context!!)
+        val webView = WebView(requireContext())
+        webView.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.file_edit_window_bg))
+        val unencodedHtml = currentFileProperties.formattedProperties(requireContext())
+        val encodedHtml = Base64.encodeToString(unencodedHtml.toByteArray(), Base64.NO_PADDING)
+        webView.loadData(encodedHtml, "text/html", "base64")
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
             .setView(webView)
             .show()
     }
@@ -337,16 +338,16 @@ class EditWindow : Fragment(), FontSizeChangedListener {
             val buttonCallbacks: Array<() -> Unit> =
                 arrayOf(
                     { Toast.makeText(
-                        context!!, getString(R.string.overwrite_aborted), Toast.LENGTH_SHORT)
+                        requireContext(), getString(R.string.overwrite_aborted), Toast.LENGTH_SHORT)
                         .show()
                     },
                     { startActivityForResult(intent, requestCode) }
                 )
-            val promptMess = context!!.getString(
+            val promptMess = requireContext().getString(
                 R.string.discard_file_changes, currentFileProperties.displayName
             )
             yesNoDialog(
-                context!! ,false, promptMess,
+                requireContext() ,false, promptMess,
                 buttonIds, buttonCallbacks
             )
         }
@@ -412,7 +413,7 @@ class EditWindow : Fragment(), FontSizeChangedListener {
         }
     }
     private fun writeProtectFile() {
-        val prefs = context!!
+        val prefs = requireContext()
             .getSharedPreferences(editWinPrefsName, Context.MODE_PRIVATE)
         writeProtectedFiles  =
             prefs.getStringSet("writeProtected", HashSet<String>())
@@ -429,7 +430,7 @@ class EditWindow : Fragment(), FontSizeChangedListener {
     // Share the current file.
     private fun shareFile(asAttachment : Boolean = true) {
         try {
-            val builder = ShareCompat.IntentBuilder.from(activity)
+            val builder = ShareCompat.IntentBuilder.from(requireActivity())
             .setType(Intent.ACTION_SEND)
             .setType("text/plain")
             .setSubject(getString(R.string.sharing_file_named, currentFileProperties.displayName))
@@ -460,7 +461,7 @@ class EditWindow : Fragment(), FontSizeChangedListener {
     // uri path + ".fontSize" as a key.
     override fun fontSizeChanged(newSize: Float) {
         editWindowTV.invalidate()
-        context!!
+        requireContext()
             .getSharedPreferences(editWinPrefsName, Context.MODE_PRIVATE)
             .edit()
             .putFloat(currentFileProperties.uriPath + ".fontSize", newSize)
@@ -474,7 +475,7 @@ class EditWindow : Fragment(), FontSizeChangedListener {
         Log.d("EditWindow:", "onOptionsItemSelected called")
         when (item.itemId) {
             R.id.share_menu_item -> {
-                val promptMess = context!!.getString(
+                val promptMess = requireContext().getString(
                     R.string.send_file_as_attachment
                 )
                 val buttonIds = intArrayOf(R.string.NO, R.string.YES)
@@ -484,7 +485,7 @@ class EditWindow : Fragment(), FontSizeChangedListener {
                         { shareFile(true)   }  // yes
                     )
                 yesNoDialog(
-                    context!! ,false, promptMess,
+                    requireContext() ,false, promptMess,
                     buttonIds, buttonCallbacks
                 )
             }
@@ -507,9 +508,9 @@ class EditWindow : Fragment(), FontSizeChangedListener {
             val fp = currentFileProperties
             fp.apply {
                 val readOnly =
-                    writeProtectedFiles!!.contains(currentFileProperties.uriPath)
-                    || currentFileProperties.displayName == ""
-                    || currentFileProperties.scopedAccess == false
+                    (writeProtectedFiles!!.contains(currentFileProperties.uriPath)
+                            || currentFileProperties.displayName == "")
+                    || !currentFileProperties.scopedAccess
                 // disable save unless we have a file.
                 findItem(R.id.save_file_item).isEnabled = !readOnly
                 val writeProtectItem = findItem(R.id.write_protect_file_item)!!

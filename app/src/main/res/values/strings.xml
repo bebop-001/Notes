@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Notes</string>
     <string name="new_string">New</string>
     <string name="open_string">Open</string>
@@ -20,19 +20,7 @@
     <string name="save_file">Save File</string>
 
     <string name="build_info">Build Info…</string>
-    <string name="build_info_query"><![CDATA[
-        <html>
-        <font color=\"#%1$06x\">
-        Application name: %2$s
-        <br>Version(%3$d, %4$s)
-        <br>Build date:   %5$s
-        <br>Install date: %6$s
-        <br>Build type: %7$s
-        </font>
-        </html>
-    ]]>
-    </string>
-    <string name="file_properties_format"><![CDATA[
+    <string name="file_properties_format" tools:ignore="PluralsCandidate"><![CDATA[
         <html><center>
         <font color=\"#%1$06x\">
         File name: \"%2$s\"
