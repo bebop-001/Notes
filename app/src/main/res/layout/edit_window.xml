@@ -13,73 +13,60 @@
             android:id="@+id/search_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="6dp"
-            android:visibility="gone"
             android:background="@drawable/border_bg"
             android:padding="6dp"
+            android:visibility="visible"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            >
+            app:layout_constraintTop_toTopOf="parent">
 
 
                 <EditText
                     android:id="@+id/search_edittext"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:textColor="@android:color/white"
+                    android:textColorHint="@android:color/darker_gray"
                     android:hint="@string/search"
                     android:imeOptions="actionSearch"
                     android:singleLine="true"
                     android:textSize="18sp"
-                    app:layout_constraintEnd_toStartOf="@+id/search_clear"
+                    app:layout_constraintEnd_toStartOf="@id/search_forward"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     tools:ignore="Autofill,TextFields" />
 
                 <ImageButton
-                    android:id="@+id/search_down"
+                    android:id="@+id/search_forward"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:padding="12dp"
                     android:layout_margin="6dp"
-                    android:background="@android:drawable/arrow_down_float"
+                    android:enabled="false"
+                    android:background="@drawable/arrow_up"
+                    android:padding="12dp"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/search_up"
-                    />
+                    app:layout_constraintEnd_toStartOf="@+id/search_back"
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <ImageButton
-                    android:id="@+id/search_up"
+                    android:id="@+id/search_back"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:padding="12dp"
                     android:layout_margin="6dp"
-                    android:background="@android:drawable/arrow_up_float"
+                    android:background="@drawable/arrow_down"
+                    android:padding="12dp"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintEnd_toStartOf="@+id/search_clear"
-                    />
+                    app:layout_constraintTop_toTopOf="parent" />
 
 
                 <ImageButton
                     android:id="@+id/search_clear"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_margin="6dp"
                     android:background="@drawable/clear_box"
                     android:padding="12dp"
-                    android:layout_margin="6dp"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/search_button"
-                    />
-
-                <ImageButton
-                    android:id="@+id/search_button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@android:drawable/ic_menu_search"
-                    android:padding="12dp"
-                    android:layout_margin="6dp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />

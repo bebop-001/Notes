@@ -21,6 +21,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
@@ -30,10 +31,7 @@ import android.util.Log
 import android.util.TypedValue
 import android.view.*
 import android.webkit.WebView
-import android.widget.EditText
-import android.widget.ScrollView
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ShareCompat
 import androidx.core.content.ContextCompat
@@ -45,11 +43,11 @@ import java.io.IOException
 import java.io.InputStreamReader
 import java.lang.Exception
 
+private const val TAG = "EditWindow"
 
 private const val CREATE_REQUEST_CODE   = 40
 private const val OPEN_REQUEST_CODE = CREATE_REQUEST_CODE  + 1
 private const val SAVE_AS_REQUEST_CODE = OPEN_REQUEST_CODE + 1
-
 @Suppress("DEPRECATION")
 class EditWindow : Fragment(), FontSizeChangedListener {
     private lateinit var stringUri : String
@@ -130,15 +128,76 @@ class EditWindow : Fragment(), FontSizeChangedListener {
         }
     }
 
+
+    /***************************** Search *********************************************/
+    private lateinit var searchEditText: EditText
+    private lateinit var searchBack: ImageButton
+    private lateinit var searchForward: ImageButton
+    private lateinit var searchClear: ImageButton
+    private lateinit var searchLayout: ConstraintLayout
+    // if "visible" is null, toggle visibility. else set to
+    // state indicated by "visible" variable.
+    fun enableButtons(enable: Boolean) {
+        searchForward.isEnabled = enable
+        searchBack.isEnabled = enable
+        searchClear.isEnabled = enable
+    }
+    private fun ConstraintLayout.setVisibility(visible: Boolean? = null) {
+        visibility =
+            if (visible == null) {
+                if (visibility == View.VISIBLE) View.GONE
+                else View.VISIBLE
+            }
+            else if (visible) View.VISIBLE
+            else View.GONE
+        if (visibility == View.VISIBLE)
+            enableButtons(searchEditText.text.isNotEmpty())
+        editWinPrefs.edit()
+            .putBoolean("searchLayoutVisible",  visibility == View.VISIBLE)
+            .apply()
+    }
+    fun ImageButton.doTextSearch(textIn: String) {
+        val forwardSearch = id == R.id.search_forward
+        Log.d(TAG, "search: $textIn,  ${if (forwardSearch) "FORWARD" else "BACK"}")
+
+    }
+    private fun View.initTextSearch () {
+        searchLayout = findViewById(R.id.search_layout)
+        searchLayout.visibility =
+            if (editWinPrefs.getBoolean(
+                    "searchLayoutVisible", true))
+                View.GONE
+            else View.VISIBLE
+        searchEditText = findViewById(R.id.search_edittext)
+        searchEditText.setTextColor(Color.parseColor("#FFFFFF"))
+        searchEditText.addTextChangedListener (object: TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) { }
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                enableButtons(searchEditText.text.isNotEmpty())
+            }
+            override fun afterTextChanged(s: Editable?) { }
+        })
+        searchForward = findViewById(R.id.search_forward)
+        searchBack = findViewById(R.id.search_back)
+        searchClear = findViewById(R.id.search_clear)
+        enableButtons(false)
+        searchForward.setOnClickListener {
+            (it as ImageButton).doTextSearch(searchEditText.text.toString())
+        }
+        searchBack.setOnClickListener {
+            (it as ImageButton).doTextSearch(searchEditText.text.toString())
+        }
+        searchClear.setOnClickListener {
+            searchEditText.setText("")
+        }
+    }
+
     private lateinit var  _editWinPrefs: SharedPreferences
     private val editWinPrefs: SharedPreferences
         get() = _editWinPrefs
     private lateinit var editWindow: TextView
-    private lateinit var searchLayout: ConstraintLayout
-    private lateinit var searchEditText: EditText
     private lateinit var editWindowScrollView: ScrollView
 
-    private var searchLayoutVisible = true
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -151,6 +210,14 @@ class EditWindow : Fragment(), FontSizeChangedListener {
         writeProtectedFiles  =
             editWinPrefs.getStringSet("writeProtected", HashSet<String>())
         fontDefaultSize = editWinPrefs.getFloat("fontDefaultSize", -1.0f)
+
+        view.initTextSearch()
+        /*
+        searchLayout.setVisibility(
+            editWinPrefs.getBoolean("searchLayoutVisible", false)
+        )
+
+         */
 
         editWindow = view.findViewById(R.id.edit_window_tv)
         if (fontDefaultSize < 0) {
@@ -224,13 +291,6 @@ class EditWindow : Fragment(), FontSizeChangedListener {
             Log.d("OnFocusChangeListener"
                 , String.format("hasFocus:%s", hasFocus.toString()))
         }
-        searchLayout = view.findViewById(R.id.search_layout)
-        searchLayout.visibility =
-            if (editWinPrefs.getBoolean(
-            "searchLayoutGone", true))
-                View.GONE
-            else View.VISIBLE
-        searchEditText = view.findViewById(R.id.search_edittext)
 
         setHasOptionsMenu(true)
         if (stringUri != "")
@@ -313,6 +373,7 @@ class EditWindow : Fragment(), FontSizeChangedListener {
                     .getFloat(uri.path + ".fontSize", fontDefaultSize))
 
             editWindow.text = stringBuilder.toString()
+            // searchLayout.setVisibility()
 
             currentFileProperties = FileProperties(requireContext(), uri)
             editWindowTextChanges = 0
@@ -508,23 +569,7 @@ class EditWindow : Fragment(), FontSizeChangedListener {
                     buttonIds, buttonCallbacks
                 )
             }
-            R.id.search_text_item -> {
-                searchLayout.visibility =
-                    if (searchLayout.visibility == View.GONE) {
-                        View.VISIBLE
-                    }
-                    else {
-                        requireActivity()
-                            .hideKeyboard(searchEditText)
-                            .clearTextView()
-                        View.GONE
-                    }
-                editWinPrefs.edit()
-                    .putBoolean(
-                        "searchLayoutGone",
-                        searchLayout.visibility == View.GONE)
-                    .apply()
-            }
+            R.id.search_text_item -> searchLayout.setVisibility()
             R.id.save_file_item -> getSaveFile()
             R.id.save_as_file_item -> getSaveFileAs()
             R.id.open_file_item -> getOpenFile()
