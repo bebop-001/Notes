@@ -213,7 +213,7 @@ class EditWindow : Fragment(), FontSizeChangedListener {
     private fun View.initTextSearch () {
         searchLayout = findViewById(R.id.search_layout)
         searchLayout.visibility =
-            if (editWinPrefs.getBoolean("searchLayoutVisible", true))
+            if (editWinPrefs.getBoolean("searchLayoutVisible", false))
                 View.VISIBLE
             else View.GONE
         if (searchLayout.visibility == View.GONE)
