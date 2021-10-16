@@ -216,8 +216,6 @@ class EditWindow : Fragment(), FontSizeChangedListener {
             if (editWinPrefs.getBoolean("searchLayoutVisible", false))
                 View.VISIBLE
             else View.GONE
-        if (searchLayout.visibility == View.GONE)
-            return
         searchEditText = findViewById(R.id.search_edittext)
         searchEditText.setTextColor(Color.parseColor("#FFFFFF"))
         searchEditText.addTextChangedListener (object: TextWatcher {
