@@ -64,4 +64,10 @@
     <string name="send_file_as_attachment">Send file as an attachment?</string>
     <string name="search">Search for</string>
 
+    <string-array name="matches_strings">
+        <item>No matches for "%1$s"</item>
+        <item>One match for "%1$s"</item>
+        <item>Match %1$d of %2$d matches for "%2$s"</item>
+    </string-array>
+
 </resources>

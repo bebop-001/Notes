@@ -25,35 +25,37 @@
                     android:id="@+id/search_edittext"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:textColor="@android:color/white"
-                    android:textColorHint="@android:color/darker_gray"
                     android:hint="@string/search"
                     android:imeOptions="actionSearch"
                     android:singleLine="true"
+                    android:textColor="@android:color/white"
+                    android:textColorHint="@android:color/darker_gray"
                     android:textSize="18sp"
-                    app:layout_constraintEnd_toStartOf="@id/search_forward"
+                    app:layout_constraintEnd_toStartOf="@id/search_back"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     tools:ignore="Autofill,TextFields" />
-
-                <ImageButton
-                    android:id="@+id/search_forward"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="6dp"
-                    android:enabled="false"
-                    android:background="@drawable/arrow_up"
-                    android:padding="12dp"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/search_back"
-                    app:layout_constraintTop_toTopOf="parent" />
 
                 <ImageButton
                     android:id="@+id/search_back"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_margin="6dp"
+                    android:background="@drawable/arrow_up"
+                    android:enabled="false"
+                    android:foregroundGravity="center"
+                    android:padding="12dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/search_forward"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <ImageButton
+                    android:id="@+id/search_forward"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="6dp"
                     android:background="@drawable/arrow_down"
+                    android:foregroundGravity="center"
                     android:padding="12dp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toStartOf="@+id/search_clear"
@@ -65,7 +67,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_margin="6dp"
+                    android:layout_marginStart="12dp"
                     android:background="@drawable/clear_box"
+                    android:foregroundGravity="center"
                     android:padding="12dp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -85,11 +89,12 @@
             >
 
                 <EditText
-                    android:id="@+id/edit_window_tv"
+                    android:id="@+id/edit_window_et"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@color/file_edit_window_bg"
                     android:clickable="true"
+                    android:bufferType="spannable"
                     android:ems="10"
                     android:focusable="true"
                     android:gravity="start"

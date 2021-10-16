@@ -23,6 +23,7 @@ package com.kana_tutor.notes.kanautils
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
+import android.content.res.Resources
 import android.graphics.Color
 import android.os.Build
 import android.text.Html
@@ -42,6 +43,26 @@ import com.kana_tutor.notes.R
 import com.kana_tutor.notes.monospaceDialog
 import java.io.File
 import java.text.SimpleDateFormat
+
+fun Resources.pluralize_N_of(arrayResId: Int, selected:Int, quantity:Int, description:String = "") : String {
+    val quantityStrings = getStringArray(arrayResId)
+    return if (description.isNotEmpty()) {
+        when (quantity) {
+            0 -> quantityStrings[0].format(description)
+            1 -> quantityStrings[1].format(description)
+            else -> quantityStrings[2].format(selected, quantity, description)
+        }
+    }
+    else {
+        when (quantity) {
+            0 -> quantityStrings[0]
+            1 -> quantityStrings[1]
+            else -> quantityStrings[2].format(quantity)
+        }
+    }
+}
+
+
 
 // Return a spanned html string using the appropriate call for
 // the user's device.

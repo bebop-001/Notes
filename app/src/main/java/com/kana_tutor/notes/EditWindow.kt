@@ -44,6 +44,7 @@ import java.io.IOException
 import java.io.InputStreamReader
 import java.lang.Exception
 
+@Suppress("unused")
 private const val TAG = "EditWindow"
 
 private const val CREATE_REQUEST_CODE   = 40
@@ -137,102 +138,92 @@ class EditWindow : Fragment(), FontSizeChangedListener {
     private lateinit var searchBack: ImageButton
     private lateinit var searchForward: ImageButton
     private lateinit var searchClear: ImageButton
-    private lateinit var doSearch: ImageButton
     private lateinit var searchLayout: ConstraintLayout
 
     private var currentSearch = SearchFor()
-    fun enableButtons() {
-        val enable = currentSearch.isNotEmpty()
-        searchForward.isEnabled = currentSearch.isNotEmpty()
-        searchBack.isEnabled = currentSearch.isNotEmpty()
-        searchClear.isEnabled = searchEditText.text.isNotEmpty()
-        doSearch.isEnabled = searchEditText.text.isNotEmpty()
-    }
-
 
     private inner class SearchFor (val searchFor:String = "") {
-        var currentSearches = mutableListOf<Pair<Int,Int>>()
-        fun isNotEmpty(): Boolean = currentSearches.isNotEmpty()
+        var searches = mutableListOf<Pair<Int,Int>>()
+        fun isNotEmpty(): Boolean = searches.isNotEmpty()
         val size: Int
-            get() = currentSearches.size
+            get() = searches.size
 
         init {
             if (searchFor.isNotEmpty()) {
-                currentSearches.clear()
+                searches.clear()
                 val searchText = editWindow.text.toString()
-                val matches = searchFor.toRegex().findAll(searchText)
-                if (matches != null) {
-                    matches.forEach { val range = it.range
-                        currentSearches.add(range.first to range.last + 1)
-                    }
+                searchFor.toRegex().findAll(searchText).forEach { val range = it.range
+                    searches.add(range.first to range.last + 1)
                 }
-                Toast.makeText(
-                    requireContext(),
-                    resources.pluralize(
-                        R.array.matches_strings, currentSearches.size, searchFor),
-                    Toast.LENGTH_LONG
-                ).show()
             }
         }
     }
-    private fun ConstraintLayout.setVisibility(visible: Boolean? = null) {
-        visibility =
-            if (visible == null) {
-                if (visibility == View.VISIBLE) View.GONE
-                else View.VISIBLE
-            }
-            else if (visible) View.VISIBLE
-            else View.GONE
-        if (visibility == View.VISIBLE)
-            enableButtons()
-        editWinPrefs.edit()
-            .putBoolean("searchLayoutVisible",  visibility == View.VISIBLE)
-            .apply()
-    }
-    var currentSearchIndex = 0
+    var toast : Toast? = null
+    var searchIndex = 0
     private fun View.doTextSearch() {
         val curText = searchEditText.text.toString()
-        if (currentSearch.searchFor != curText) {
-            currentSearch = SearchFor(curText)
-            currentSearchIndex = 0
-            searchForward.isEnabled = currentSearch.size > 1
-            searchBack.isEnabled = currentSearch.size > 1
-        }
-        if (editWindow.hasFocus()) {
-            val curPos = editWindow.selectionStart
-            if (id == R.id.search_forward) {
-                currentSearchIndex = 0
-                while(currentSearch.currentSearches[currentSearchIndex].first < curPos)
-                    currentSearchIndex--
+        currentSearch = SearchFor(curText)
+        with (currentSearch) {
+            if (currentSearch.isNotEmpty() && editWindow.text.isNotEmpty()) {
+                if (editWindow.hasFocus()) {
+                    val curPos = editWindow.selectionStart
+                    if (size == 1)
+                        searchIndex = 0
+                    else if (id == R.id.search_forward) {
+                        searchIndex = 0
+                        while (searches[searchIndex].first <= curPos && searchIndex < searches.lastIndex)
+                            searchIndex++
+                    }
+                    else {
+                        searchIndex = searches.lastIndex
+                        while (searches[searchIndex].first >= curPos && searchIndex > 0)
+                            searchIndex--
+                    }
+                }
+                else searchIndex = 0
+                editWindow.requestFocus()
+                editWindow.setSelection(
+                    searches[searchIndex].first,
+                    searches[searchIndex].second
+                )
+                searchForward.isEnabled =
+                    searches.size == 1 || searchIndex != searches.lastIndex
+                searchBack.isEnabled = currentSearch.searches.size == 1 || searchIndex != 0
             }
-            else if (id == R.id.search_back) {
-                currentSearchIndex = currentSearch.currentSearches.lastIndex
-                while(currentSearch.currentSearches[currentSearchIndex].first > curPos)
-                    currentSearchIndex++
-            }
-            else currentSearchIndex = 0
+            toast?.cancel()
+            toast = Toast.makeText(
+                requireContext(),
+                resources.pluralize_N_of(
+                    R.array.matches_strings, searchIndex + 1, searches.size, searchFor),
+                Toast.LENGTH_LONG
+            )
+            toast!!.show()
+
         }
-        // up/down buttons should be off.
-        editWindow.requestFocus()
-        editWindow.setSelection(
-            currentSearch.currentSearches[currentSearchIndex].first,
-            currentSearch.currentSearches[currentSearchIndex].second
-        )
         requireActivity().hideKeyboard(searchEditText)
+    }
+    private fun setSearchButtons() {
+        if (searchLayout.visibility == View.VISIBLE) {
+            val enable = searchEditText.text.isNotEmpty() && editWindow.text.isNotEmpty()
+            searchClear.isEnabled = searchEditText.text.isNotEmpty()
+            searchForward.isEnabled = enable
+            searchBack.isEnabled = enable
+        }
     }
     private fun View.initTextSearch () {
         searchLayout = findViewById(R.id.search_layout)
         searchLayout.visibility =
-            if (editWinPrefs.getBoolean(
-                    "searchLayoutVisible", true))
+            if (editWinPrefs.getBoolean("searchLayoutVisible", true))
                 View.VISIBLE
             else View.GONE
+        if (searchLayout.visibility == View.GONE)
+            return
         searchEditText = findViewById(R.id.search_edittext)
         searchEditText.setTextColor(Color.parseColor("#FFFFFF"))
         searchEditText.addTextChangedListener (object: TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) { }
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                doSearch.isEnabled = s != null && s.length > 0
+            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) { }
+            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+                setSearchButtons()
             }
             override fun afterTextChanged(s: Editable?) { }
         })
@@ -248,8 +239,8 @@ class EditWindow : Fragment(), FontSizeChangedListener {
         searchForward = findViewById(R.id.search_forward)
         searchBack = findViewById(R.id.search_back)
         searchClear = findViewById(R.id.search_clear)
-        doSearch = findViewById(R.id.do_search)
-        enableButtons()
+        searchClear.isEnabled =
+            searchEditText.text.isNotEmpty()
         searchForward.setOnClickListener {
             it.doTextSearch()
         }
@@ -260,18 +251,13 @@ class EditWindow : Fragment(), FontSizeChangedListener {
             searchEditText.setText("")
             searchForward.isEnabled = false
             searchBack.isEnabled = false
-            searchClear.isEnabled = false
-        }
-        doSearch.setOnClickListener {  val b = (it as ImageButton)
-            b.doTextSearch()
+            searchClear.isEnabled =
+                searchEditText.text.isNotEmpty()
         }
         searchForward.isEnabled = false
         searchBack.isEnabled = false
         searchClear.isEnabled = false
-        doSearch.isEnabled = false
-
     }
-
     private lateinit var  _editWinPrefs: SharedPreferences
     private val editWinPrefs: SharedPreferences
         get() = _editWinPrefs
@@ -289,14 +275,7 @@ class EditWindow : Fragment(), FontSizeChangedListener {
         writeProtectedFiles  =
             editWinPrefs.getStringSet("writeProtected", HashSet<String>())
         fontDefaultSize = editWinPrefs.getFloat("fontDefaultSize", -1.0f)
-
         view.initTextSearch()
-        /*
-        searchLayout.setVisibility(
-            editWinPrefs.getBoolean("searchLayoutVisible", false)
-        )
-
-         */
 
         editWindow = view.findViewById(R.id.edit_window_et)
         if (fontDefaultSize < 0) {
@@ -340,13 +319,8 @@ class EditWindow : Fragment(), FontSizeChangedListener {
             }
             override fun onTextChanged(
                 s: CharSequence, start: Int, before: Int, count: Int) {
-                /*
-                Log.d("TextListener", String.format(
-                    "onChange: start %d, count %d, before %d : \"%s\":len %d"
-                    , start, count, before, s.shortChangeMess(start, count), s.length)
-                )
-                 */
-                // count > 0, chars added.  before > 0 chars removed.
+                setSearchButtons()
+
                 if (count > 0 || before > 0) {
                     editWindowTextChanges++
                     titleListener?.titleChanged(currentFileTitle)
@@ -374,8 +348,10 @@ class EditWindow : Fragment(), FontSizeChangedListener {
         setHasOptionsMenu(true)
         if (stringUri != "")
             openFile(Uri.parse(stringUri))
-        if (clipboardText.isNotEmpty())
+        if (clipboardText.isNotEmpty()) {
             editWindow.setText(clipboardText)
+            setSearchButtons()
+        }
         return view
     }
     private fun saveToUri(uri : Uri, whoResId : Int) {
@@ -452,7 +428,6 @@ class EditWindow : Fragment(), FontSizeChangedListener {
                     .getFloat(uri.path + ".fontSize", fontDefaultSize))
 
             editWindow.setText(stringBuilder.toString())
-            // searchLayout.setVisibility()
 
             currentFileProperties = FileProperties(requireContext(), uri)
             editWindowTextChanges = 0
@@ -648,7 +623,16 @@ class EditWindow : Fragment(), FontSizeChangedListener {
                     buttonIds, buttonCallbacks
                 )
             }
-            R.id.search_text_item -> searchLayout.setVisibility()
+            R.id.search_text_item -> {
+                // toggle visibility.
+                val isVisible = searchLayout.visibility == View.VISIBLE
+                searchLayout.visibility =
+                    if (isVisible) View.GONE
+                    else View.VISIBLE
+                editWinPrefs.edit()
+                    .putBoolean("searchLayoutVisible", !isVisible).apply()
+                setSearchButtons()
+            }
             R.id.save_file_item -> getSaveFile()
             R.id.save_as_file_item -> getSaveFileAs()
             R.id.open_file_item -> getOpenFile()
