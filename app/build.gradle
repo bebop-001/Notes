@@ -37,8 +37,11 @@ android {
         applicationId "com.kana_tutor.notes"
         minSdkVersion 19
         targetSdkVersion 31
-        versionCode 3
-        versionName "2.0.1-${gitBranch()}"
+        // versionCode 3
+        // versionName "2.0.1-${gitBranch()}"
+        // search working.
+        versionCode 4
+        versionName "3.0.0-${gitBranch()}"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField 'long', 'BUILD_TIMESTAMP', String.format("0x%08xL", System.currentTimeMillis())
