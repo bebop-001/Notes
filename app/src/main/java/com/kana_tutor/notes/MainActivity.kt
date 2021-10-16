@@ -79,32 +79,23 @@ class MainActivity : AppCompatActivity(), EditWindow.EditWinEventListener {
             true
         }
 
-        var clipboardText = ""
         if (intent != null) {
-            Log.d("Intent", "$intent")
-            if(intent.action == Intent.ACTION_SEND) {
-                val extras = intent.extras
-                val keys = extras!!.keySet().toList()
-                clipboardText = extras.get(Intent.EXTRA_TEXT) as String
-                Log.d("Intent", "intent:\"$intent\"\nextras:$extras\nextra keys:${keys}\nTEXT:\"$clipboardText\"")
-                currentEditWindow = null
-            }
-            else if (intent.type == "text/plain" && intent.data != null) {
+            if (intent.type == "text/plain" && intent.data != null) {
                 intentUri = intent.data.toString()
                 currentEditWindow = null
             }
         }
+        Log.d("after:", String.format("intUri:\"%s\", currentEditWindow:\"%s\"",
+            intentUri, currentEditWindow?.toString() ?: "NULL"))
 
         if (currentEditWindow == null) {
-            currentEditWindow = EditWindow.newInstance(intentUri, clipboardText)
+            currentEditWindow = EditWindow.newInstance(intentUri)
 
             val manager = supportFragmentManager
             val transaction = manager.beginTransaction()
             transaction.add(R.id.fragment_placeholder, currentEditWindow!!)
             transaction.commit()
         }
-        Log.d("after:", String.format("intUri:\"%s\", currentEditWindow:\"%s\"",
-            intentUri, currentEditWindow?.toString() ?: "NULL"))
 
         toolbar = rootView!!.findViewById(R.id.toolbar)
         toolbar.overflowIcon = ContextCompat.getDrawable(
