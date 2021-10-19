@@ -12,6 +12,18 @@ lateinit var TMP: File
 private const val TAG = "Notes"
 @Suppress("unused")
 class Notes : Application() {
+    companion object {
+        // create and return new empty tmp file.
+        fun newTmpFile(frontName:String, extent:String) : File {
+            var rv: File
+            do {
+                val rand = "%04x".format(System.currentTimeMillis() % 0xFFFF)
+                rv = File(TMP, "$frontName.$rand.$extent")
+            } while (rv.exists())
+            rv.createNewFile()
+            return rv
+        }
+    }
     override fun onCreate() {
         super.onCreate()
         if (!::HOME.isInitialized) {
@@ -29,9 +41,9 @@ class Notes : Application() {
         val oneWeekAgo = System.currentTimeMillis() -
                 7 * 24 * 60 * 60 * 1000
         // files in the TMP dir are removed after one week.
-        val rmFiles  = TMP.list().map{File(it!!)}
-            .filter{it.isFile && it.lastModified() < oneWeekAgo }
-        if (rmFiles.isNotEmpty()) {
+        val rmFiles  = TMP.list()?.map{File(it!!)}
+            ?.filter{it.isFile && it.lastModified() < oneWeekAgo }
+        if (rmFiles != null && rmFiles.isNotEmpty()) {
             Log.d(TAG, "Removing old TMP files:${
                 rmFiles.map{it.toString()}.joinToString { ", " }
             }")

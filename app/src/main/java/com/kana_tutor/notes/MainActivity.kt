@@ -45,8 +45,6 @@ class MainActivity : AppCompatActivity(), EditWindow.EditWinEventListener {
     @SuppressLint("StaticFieldLeak")
     companion object {
         var displayTheme = 0 // for light or dark theme.
-        private var currentEditWindow : EditWindow? = null
-        var intentUri = ""
         var isNightMode = true
     }
 
@@ -83,36 +81,30 @@ class MainActivity : AppCompatActivity(), EditWindow.EditWinEventListener {
             true
         }
 
-        var sentString = ""
+        var sentText = ""
         if (intent != null) {
             if (intent.action == Intent.ACTION_SEND) {
-
+                sentText = ""
                 if (intent.type != "text/plain") {
-
+                    Log.d(TAG, "Action.SEND: Can only handle type \"text/plaon\"")
                 }
                 else if (intent.extras == null) {
-
+                    Log.d(TAG, "Action.SEND: Received Action.SEND with no text.")
                 }
                 else {
-                    sentString = intent.extras!!
+                    sentText = intent.extras!!
                         .getString(Intent.EXTRA_TEXT).toString()
+                    Log.d(TAG, "Intent.ACTION_SEND: received $sentText")
                 }
-                Log.d(TAG, "Intent.ACTION_SEND: received $sentString")
-            }
-            else if (intent.action == Intent.ACTION_MAIN) {
-
-                if (intent.type == "text/plain" && intent.data != null) {
-                    intentUri = intent.data.toString()
-                    currentEditWindow = null
-                }
-                Log.d(TAG, "Intent.ACTION_MAIN: uri=\"$intentUri\"")
             }
         }
-        Log.d(TAG, "intentUri = \"$intentUri\", currentEditWindow = null:${currentEditWindow == null}")
-            currentEditWindow = EditWindow.newInstance(intentUri)
+        val editWindow =
+            if (sentText.isNotEmpty())
+                EditWindow.newInstance(sentText = sentText)
+            else EditWindow.newInstance()
         val manager = supportFragmentManager
         val transaction = manager.beginTransaction()
-        transaction.add(R.id.fragment_placeholder, currentEditWindow!!)
+        transaction.add(R.id.fragment_placeholder, editWindow)
         transaction.commit()
         toolbar = rootView!!.findViewById(R.id.toolbar)
         toolbar.overflowIcon = ContextCompat.getDrawable(
@@ -125,7 +117,7 @@ class MainActivity : AppCompatActivity(), EditWindow.EditWinEventListener {
 
     override fun onResume() {
         super.onResume()
-        supportActionBar!!.title = currentEditWindow!!.currentFileTitle
+        supportActionBar!!.title = EditWindow.currentFileTitle
     }
 
     private fun changeDisplayTheme(newTheme : String) : Boolean {

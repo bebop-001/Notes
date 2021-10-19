@@ -53,40 +53,40 @@ private const val SAVE_AS_REQUEST_CODE = OPEN_REQUEST_CODE + 1
 @Suppress("DEPRECATION")
 class EditWindow : Fragment(), FontSizeChangedListener {
     private lateinit var stringUri : String
-    private lateinit var clipboardText : String
+    private lateinit var sentText : String
     companion object {
         /*
          * Use this factory method to create a new instance of
          * this fragment.
          */
         @JvmStatic
-        fun newInstance(stringUri: String) =
+        fun newInstance(stringUri: String = "", sentText: String = "") =
             EditWindow().apply {
                 arguments = Bundle().apply {
                     putString("stringUri", stringUri)
+                    putString("sentText", sentText)
                 }
             }
+
         private var currentFileProperties = FileProperties()
         private var editWindowTextChanges = 0
         private var fontDefaultSize = 0.0f
-    }
-    private var _currentFileTitle = ""
-    val currentFileTitle : String
-        get() {
-            _currentFileTitle = if (currentFileProperties.displayName == "")
-                ""
-            else {
-                val changed = if (editWindowTextChanges > 0) "✔️" else " "
-                val writeProtected =
-                    if (currentFileProperties.scopedAccess) {
-                        if (currentFileProperties.internalWriteProtect) "🔒" else "\uD83D\uDD13"
-                    }
-                    else "❌"
-                changed + writeProtected + currentFileProperties.displayName
+        private var _currentFileTitle = ""
+        val currentFileTitle: String
+            get() {
+                _currentFileTitle = if (currentFileProperties.displayName == "")
+                    ""
+                else {
+                    val changed = if (editWindowTextChanges > 0) "✔️" else " "
+                    val writeProtected =
+                        if (currentFileProperties.scopedAccess) {
+                            if (currentFileProperties.internalWriteProtect) "🔒" else "\uD83D\uDD13"
+                        } else "❌"
+                    changed + writeProtected + currentFileProperties.displayName
+                }
+                return _currentFileTitle
             }
-            return _currentFileTitle
-        }
-
+    }
 
     interface EditWinEventListener {
         fun titleChanged (title:String)
@@ -125,8 +125,8 @@ class EditWindow : Fragment(), FontSizeChangedListener {
         super.onCreate(savedInstanceState)
         arguments?.let {
             stringUri = it.getString("stringUri", "")
-            clipboardText = it.getString("clipboardText", "")
-            Log.d("Frag:onCreate", "stringUri = \"${stringUri}\":clibboardText:\"$clipboardText\"")
+            sentText = it.getString("sentText", "")
+            Log.d("Frag:onCreate", "stringUri = \"${stringUri}\":clibboardText:\"$sentText\"")
         }
     }
 
@@ -158,8 +158,8 @@ class EditWindow : Fragment(), FontSizeChangedListener {
             }
         }
     }
-    var toast : Toast? = null
-    var searchIndex = 0
+    private var toast : Toast? = null
+    private var searchIndex = 0
     private fun View.doTextSearch() {
         val curText = searchEditText.text.toString()
         currentSearch = SearchFor(curText)
@@ -167,17 +167,18 @@ class EditWindow : Fragment(), FontSizeChangedListener {
             if (currentSearch.isNotEmpty() && editWindow.text.isNotEmpty()) {
                 if (editWindow.hasFocus()) {
                     val curPos = editWindow.selectionStart
-                    if (size == 1)
-                        searchIndex = 0
-                    else if (id == R.id.search_forward) {
-                        searchIndex = 0
-                        while (searches[searchIndex].first <= curPos && searchIndex < searches.lastIndex)
-                            searchIndex++
-                    }
-                    else {
-                        searchIndex = searches.lastIndex
-                        while (searches[searchIndex].first >= curPos && searchIndex > 0)
-                            searchIndex--
+                    when {
+                        size == 1 -> searchIndex = 0
+                        id == R.id.search_forward -> {
+                            searchIndex = 0
+                            while (searches[searchIndex].first <= curPos && searchIndex < searches.lastIndex)
+                                searchIndex++
+                        }
+                        else -> {
+                            searchIndex = searches.lastIndex
+                            while (searches[searchIndex].first >= curPos && searchIndex > 0)
+                                searchIndex--
+                        }
                     }
                 }
                 else searchIndex = 0
@@ -346,8 +347,8 @@ class EditWindow : Fragment(), FontSizeChangedListener {
         setHasOptionsMenu(true)
         if (stringUri != "")
             openFile(Uri.parse(stringUri))
-        if (clipboardText.isNotEmpty()) {
-            editWindow.setText(clipboardText)
+        if (sentText.isNotEmpty()) {
+            editWindow.setText(sentText)
             setSearchButtons()
         }
         return view
