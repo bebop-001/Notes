@@ -36,6 +36,9 @@ import com.kana_tutor.notes.kanautils.promptForShortcut
 import androidx.appcompat.app.AppCompatDelegate
 import com.kana_tutor.notes.kanautils.displayUsage
 
+@Suppress("unused")
+private const val TAG = "MainActivity"
+
 const val appPrefsFileName = "userPrefs.xml"
 class MainActivity : AppCompatActivity(), EditWindow.EditWinEventListener {
 
@@ -74,32 +77,47 @@ class MainActivity : AppCompatActivity(), EditWindow.EditWinEventListener {
         isNightMode = if (displayTheme == R.string.light_theme) {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
             false
-        } else {
+        }
+        else {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
             true
         }
 
+        var sentString = ""
         if (intent != null) {
-            if (intent.type == "text/plain" && intent.data != null) {
-                intentUri = intent.data.toString()
-                currentEditWindow = null
+            if (intent.action == Intent.ACTION_SEND) {
+
+                if (intent.type != "text/plain") {
+
+                }
+                else if (intent.extras == null) {
+
+                }
+                else {
+                    sentString = intent.extras!!
+                        .getString(Intent.EXTRA_TEXT).toString()
+                }
+                Log.d(TAG, "Intent.ACTION_SEND: received $sentString")
+            }
+            else if (intent.action == Intent.ACTION_MAIN) {
+
+                if (intent.type == "text/plain" && intent.data != null) {
+                    intentUri = intent.data.toString()
+                    currentEditWindow = null
+                }
+                Log.d(TAG, "Intent.ACTION_MAIN: uri=\"$intentUri\"")
             }
         }
-        Log.d("after:", String.format("intUri:\"%s\", currentEditWindow:\"%s\"",
-            intentUri, currentEditWindow?.toString() ?: "NULL"))
-
-        if (currentEditWindow == null) {
+        Log.d(TAG, "intentUri = \"$intentUri\", currentEditWindow = null:${currentEditWindow == null}")
             currentEditWindow = EditWindow.newInstance(intentUri)
-
-            val manager = supportFragmentManager
-            val transaction = manager.beginTransaction()
-            transaction.add(R.id.fragment_placeholder, currentEditWindow!!)
-            transaction.commit()
-        }
-
+        val manager = supportFragmentManager
+        val transaction = manager.beginTransaction()
+        transaction.add(R.id.fragment_placeholder, currentEditWindow!!)
+        transaction.commit()
         toolbar = rootView!!.findViewById(R.id.toolbar)
         toolbar.overflowIcon = ContextCompat.getDrawable(
-            this, R.drawable.vert_ellipsis_light_img)
+            this, R.drawable.vert_ellipsis_light_img
+        )
         setSupportActionBar(toolbar)
         supportActionBar!!.setLogo(R.mipmap.notes_launcher)
         supportActionBar!!.title = ""
